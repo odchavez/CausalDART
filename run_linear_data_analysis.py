@@ -195,26 +195,33 @@ class linear_model_analysis():
             model, post_p_CATE_trace = self.fit_linear_model(
                 niter, tune, X,Y,progressbar_bool = False, predictors=predictors)
             
-            #if j==0:
-            #    all_runs_CATE_trace = pd.DataFrame(post_p_CATE_trace['Beta'])
-            #else: 
-            #    all_runs_CATE_trace = pd.concat([all_runs_CATE_trace, pd.DataFrame(post_p_CATE_trace['Beta'])])
-            
             X_Beta = np.matmul(X, post_p_CATE_trace['Beta'].T)
-            print("X_Beta shape=",X_Beta.shape)
-            print("np.sqrt(Y_i_star_var) shape=",np.sqrt(Y_i_star_var).shape)
+            
+            #print("X_Beta.T shape=",X_Beta.T.shape)
+            #print("np.sqrt(Y_i_star_var) shape=",np.sqrt(Y_i_star_var).shape)
+            
+            Y_i_star_tilda_post_temp = np.multiply(
+                X_Beta.T, 
+                np.sqrt(Y_i_star_var).reshape((1, len(Y_i_star_var)))
+            )
+            #print("Y_i_star_tilda_post_temp.shape = ", Y_i_star_tilda_post_temp.shape)
             
             df_temp = pd.DataFrame(post_p_CATE_trace['Beta'], columns=range(X.shape[1]))
+            df_temp_Y_i_star_tilda = pd.DataFrame(
+                Y_i_star_tilda_post_temp, 
+                columns=range(Y_i_star_tilda_post_temp.shape[1]))
+            
             if j==0:
                 all_runs_CATE_trace = df_temp
-                all_runs_variance_Y_i_star = [np.sqrt(Y_i_star_var)]
+                all_runs_Y_i_star_tilda_trace = df_temp_Y_i_star_tilda
             else: 
                 all_runs_CATE_trace = pd.concat([all_runs_CATE_trace, df_temp], ignore_index=True)
-                all_runs_variance_Y_i_star.append(np.sqrt(Y_i_star_var))
+                all_runs_Y_i_star_tilda_trace = (
+                    pd.concat([all_runs_Y_i_star_tilda_trace, df_temp_Y_i_star_tilda], ignore_index=True))
                 
         self.Y_i_star_tilda_posterior_propensity_linear_model_trace={}        
         self.Y_i_star_tilda_posterior_propensity_linear_model_trace['Beta']=all_runs_CATE_trace
-        self.Y_i_star_tilda_posterior_propensity_linear_model_trace['Y_i_star_std']=all_runs_variance_Y_i_star
+        self.Y_i_star_tilda_posterior_propensity_linear_model_trace['Y_i_star_tilda']=all_runs_Y_i_star_tilda_trace
 
     
 
