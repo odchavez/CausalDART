@@ -154,6 +154,34 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         self._acceptance_trace = self.combined_chains["acceptance"]
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel fit")
         return self
+    
+def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, p: np.ndarray) -> 'SklearnModel':
+        """
+        Learn the model based on training data
+
+        Parameters
+        ----------
+        X: pd.DataFrame
+            training covariates
+        y: np.ndarray
+            training targets
+        p: np.ndarray
+            propensity scores
+            
+        Returns
+        -------
+        SklearnModel
+            self with trained parameter values
+        """
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel fit_CGM")
+
+        self.model = self._construct_model(X, y)
+        self.extract = Parallel(n_jobs=self.n_jobs)(self.f_delayed_chains(X, y))
+        self.combined_chains = self._combine_chains(self.extract)
+        self._model_samples, self._prediction_samples = self.combined_chains["model"], self.combined_chains["in_sample_predictions"]
+        self._acceptance_trace = self.combined_chains["acceptance"]
+        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel fit_CGM")
+        return self
 
     @staticmethod
     def _combine_chains(extract: List[Chain]) -> Chain:
