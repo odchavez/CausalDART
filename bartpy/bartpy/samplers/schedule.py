@@ -100,13 +100,13 @@ class SampleScheduleCGM:
         """
         print("enter bartpy/bartpy/samplers/schedule.py SampleScheduleCGM steps")
         # sample g and sigma_g
-        for tree in model.refreshed_trees():
+        for tree in model.refreshed_trees_g():
             yield "Tree", lambda: self.tree_sampler.step(model, tree)
             for leaf_node in tree.leaf_nodes:
                 yield "Node", lambda: self.leaf_sampler.step(model, leaf_node)
         
         # sample h and sigma_h
-        for tree in model.refreshed_trees():
+        for tree in model.refreshed_trees_h():
             yield "Tree", lambda: self.tree_sampler.step(model, tree)
             for leaf_node in tree.leaf_nodes:
                 yield "Node", lambda: self.leaf_sampler.step(model, leaf_node)

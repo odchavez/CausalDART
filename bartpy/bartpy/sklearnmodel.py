@@ -37,10 +37,34 @@ def run_chain(model: 'SklearnModel', X: np.ndarray, y: np.ndarray):
     return output
 
 
+def run_chain_cgm(model: 'SklearnModel', X: np.ndarray, y: np.ndarray, W: np.ndarray, p: np.ndarray):
+    """
+    Run a single chain for a model
+    Primarily used as a building block for constructing a parallel run of multiple chains
+    """
+    print("enter bartpy/bartpy/sklearnmodel.py run_chain_cgm")
+    model.model = model._construct_model_cgm(X, y, W, p)
+    output = model.sampler.samples(model.model,
+                                 model.n_samples,
+                                 model.n_burn,
+                                 model.thin,
+                                 model.store_in_sample_predictions,
+                                 model.store_acceptance_trace)
+    print("-exit bartpy/bartpy/sklearnmodel.py run_chain_cgm")
+    return output
+
+
 def delayed_run_chain():
     print("enter bartpy/bartpy/sklearnmodel.py delayed_run_chain")
     output = run_chain
     print("-exit bartpy/bartpy/sklearnmodel.py delayed_run_chain")
+    return output
+
+
+def delayed_run_chain_cgm():
+    print("enter bartpy/bartpy/sklearnmodel.py delayed_run_chain_cgm")
+    output = run_chain_cgm
+    print("-exit bartpy/bartpy/sklearnmodel.py delayed_run_chain_cgm")
     return output
 
 
@@ -113,6 +137,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         if "model" in kwargs:
             if kwargs["model"] == 'causal_gaussian_mixture':
                 print("Causal Gaussian Mixture using Transformed Outcomes...")
+                self.model_type = 'causal_gaussian_mixture'
                 self.n_trees = n_trees
                 self.n_chains = n_chains
                 self.sigma_a = sigma_a
@@ -137,6 +162,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 self.sigma, self.data, self.model, self._prediction_samples, self._model_samples_cgm, self.extract = [None] * 6
             
         else:
+            self.model_type = 'regression'
             self.n_trees = n_trees
             self.n_chains = n_chains
             self.sigma_a = sigma_a
@@ -325,7 +351,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         List[Callable[[], ChainExtract]]
         """
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel f_delayed_chains_cgm")
-        output = [delayed(x)(self, X, y, W, p) for x in self.f_chains()] # this is will run )consturct_model, NOT _construct_model_cgm
+        output = [delayed(x)(self, X, y, W, p) for x in self.f_chains_cgm()] # this is will run )consturct_model, NOT _construct_model_cgm
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel f_delayed_chains_cgm")
         return output
 
@@ -342,6 +368,22 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel f_chains")
         output = [delayed_run_chain() for _ in range(self.n_chains)]
+        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel f_chains")
+        return output
+    
+    def f_chains_cgm(self) -> List[Callable[[], Chain]]:
+        """
+        List of methods to run MCMC chains
+        Useful for running multiple models in parallel
+
+        Returns
+        -------
+        List[Callable[[], Extract]]
+            List of method to run individual chains
+            Length of n_chains
+        """
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel f_chains")
+        output = [delayed_run_chain_cgm() for _ in range(self.n_chains)]
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel f_chains")
         return output
 

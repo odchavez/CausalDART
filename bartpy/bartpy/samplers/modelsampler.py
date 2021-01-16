@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from bartpy.bartpy.model import Model, ModelCGM
 from bartpy.bartpy.samplers.sampler import Sampler
-from bartpy.bartpy.samplers.schedule import SampleSchedule
+from bartpy.bartpy.samplers.schedule import SampleSchedule, SampleScheduleCGM
 from bartpy.bartpy.trace import TraceLogger
 
 Chain = Mapping[str, Union[List[Any], np.ndarray]]
@@ -80,7 +80,7 @@ class ModelSampler(Sampler):
 class ModelSamplerCGM(Sampler):
 
     def __init__(self,
-                 schedule: SampleSchedule,
+                 schedule: SampleScheduleCGM,
                  trace_logger_class: Type[TraceLogger]=TraceLogger):
         print("enter bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM __init__")
         self.schedule = schedule

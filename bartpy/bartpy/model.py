@@ -202,38 +202,64 @@ class ModelCGM:
         print("-exit bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
         return output
 
-    def predict(self, X: np.ndarray=None) -> np.ndarray:
-        print("enter bartpy/bartpy/model.py ModelCGM predict")
+    def predict_g(self, X: np.ndarray=None) -> np.ndarray:
+        print("enter bartpy/bartpy/model.py ModelCGM predict_g")
         
         if X is not None:
-            output = self._out_of_sample_predict(X)
-            print("-exit bartpy/bartpy/model.py ModelCGM predict")
+            output = self._out_of_sample_predict_g(X)
+            print("-exit bartpy/bartpy/model.py ModelCGM predict_g")
             return output
-        output = np.sum([tree.predict() for tree in self.trees], axis=0)
-        print("-exit bartpy/bartpy/model.py ModelCGM predict")
+        output = np.sum([tree.predict() for tree in self.trees_g], axis=0)
+        print("-exit bartpy/bartpy/model.py ModelCGM predict_g")
+        return output
+    
+    def predict_h(self, X: np.ndarray=None) -> np.ndarray:
+        print("enter bartpy/bartpy/model.py ModelCGM predict_h")
+        
+        if X is not None:
+            output = self._out_of_sample_predict_h(X)
+            print("-exit bartpy/bartpy/model.py ModelCGM predict_h")
+            return output
+        output = np.sum([tree.predict() for tree in self.trees_h], axis=0)
+        print("-exit bartpy/bartpy/model.py ModelCGM predict_h")
         return output
 
-    def _out_of_sample_predict(self, X: np.ndarray) -> np.ndarray:
-        print("enter bartpy/bartpy/model.py ModelCGM _out_of_sample_predict")
+    def _out_of_sample_predict_g(self, X: np.ndarray) -> np.ndarray:
+        print("enter bartpy/bartpy/model.py ModelCGM _out_of_sample_predict_g")
         
         if type(X) == pd.DataFrame:
             X: pd.DataFrame = X
             X = X.values
-        output = np.sum([tree.predict(X) for tree in self.trees], axis=0)
-        print("-exit bartpy/bartpy/model.py ModelCGM _out_of_sample_predict")
+        output = np.sum([tree.predict(X) for tree in self.trees_g], axis=0)
+        print("-exit bartpy/bartpy/model.py ModelCGM _out_of_sample_predict_g")
+        return output
+    
+    def _out_of_sample_predict_h(self, X: np.ndarray) -> np.ndarray:
+        print("enter bartpy/bartpy/model.py ModelCGM _out_of_sample_predict_h")
+        
+        if type(X) == pd.DataFrame:
+            X: pd.DataFrame = X
+            X = X.values
+        output = np.sum([tree.predict(X) for tree in self.trees_h], axis=0)
+        print("-exit bartpy/bartpy/model.py ModelCGM _out_of_sample_predict_h")
         return output
 
     @property
-    def trees(self) -> List[Tree]:
-        print("enter bartpy/bartpy/model.py ModelCGM trees")
-        print("-exit bartpy/bartpy/model.py ModelCGM trees")
-        return self._trees
+    def trees_g(self) -> List[Tree]:
+        print("enter bartpy/bartpy/model.py ModelCGM trees_g")
+        print("-exit bartpy/bartpy/model.py ModelCGM trees_g")
+        return self._trees_g
+    
+    def trees_h(self) -> List[Tree]:
+        print("enter bartpy/bartpy/model.py ModelCGM trees_h")
+        print("-exit bartpy/bartpy/model.py ModelCGM trees_h")
+        return self._trees_h
 
     def refreshed_trees_g(self) -> Generator[Tree, None, None]: # the internals of the this function will need to be thouroughly checked
         print("enter bartpy/bartpy/model.py ModelCGM refreshed_trees_g")
         
         if self._prediction is None:
-            self._prediction = self.predict()
+            self._prediction = self.predict_g()
         for tree in self._trees_g:
             self._prediction -= tree.predict()
             tree.update_y(self.data.y.values - self._prediction)
@@ -245,7 +271,7 @@ class ModelCGM:
         print("enter bartpy/bartpy/model.py ModelCGM refreshed_trees_h")
         
         if self._prediction is None:
-            self._prediction = self.predict()
+            self._prediction = self.predict_h()
         for tree in self._trees_h:
             self._prediction -= tree.predict()
             tree.update_y(self.data.y.values - self._prediction)
