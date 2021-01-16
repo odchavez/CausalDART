@@ -376,6 +376,97 @@ class Target(object):
         print("-exit bartpy/bartpy/data.py Target values")
         return self._y
 
+    
+class PropensityScore(object):
+    
+    def __init__(self, p, mask, n_obsv, p_sum=None):
+        print("enter bartpy/bartpy/data.py PropensityScore __init__")
+        
+        self._p = p
+
+        self._mask = mask
+        self._inverse_mask_int = (~self._mask).astype(int)
+        self._n_obsv = n_obsv
+
+        if p_sum is None:
+            self.p_sum_cache_up_to_date = False
+            self._summed_p = None
+        else:
+            self.p_sum_cache_up_to_date = True
+            self._summed_p = p_sum
+        print("-exit bartpy/bartpy/data.py PropensityScore __init__")
+
+    def summed_p(self) -> float:
+        print("enter bartpy/bartpy/data.py PropensityScore summed_p")
+        
+        if self.p_sum_cache_up_to_date:
+            print("-exit bartpy/bartpy/data.py PropensityScore summed_p")
+            return self._summed_p
+        else:
+            self._summed_p = np.sum(self._p * self._inverse_mask_int)
+            self.p_sum_cache_up_to_date = True
+            print("-exit bartpy/bartpy/data.py PropensityScore summed_p")
+            return self._summed_p
+
+    def update_p(self, p) -> None:
+        print("enter bartpy/bartpy/data.py PropensityScore update_p")
+        
+        self._p = p
+        self.p_sum_cache_up_to_date = False
+        print("-exit bartpy/bartpy/data.py PropensityScore update_p")
+
+    @property
+    def values(self):
+        print("enter bartpy/bartpy/data.py PropensityScore values")
+        print("-exit bartpy/bartpy/data.py PropensityScore values")
+        return self._p
+
+
+class TreatmentAssignment(object):
+    
+    def __init__(self, W, mask, n_obsv, W_sum=None):
+        print("enter bartpy/bartpy/data.py TreatmentAssignment __init__")
+        
+        self._W = W
+
+        self._mask = mask
+        self._inverse_mask_int = (~self._mask).astype(int)
+        self._n_obsv = n_obsv
+
+        if W_sum is None:
+            self.W_sum_cache_up_to_date = False
+            self._summed_W = None
+        else:
+            self.W_sum_cache_up_to_date = True
+            self._summed_W = W_sum
+        print("-exit bartpy/bartpy/data.py TreatmentAssignment __init__")
+
+    def summed_W(self) -> float:
+        print("enter bartpy/bartpy/data.py TreatmentAssignment summed_W")
+        
+        if self.W_sum_cache_up_to_date:
+            print("-exit bartpy/bartpy/data.py TreatmentAssignment summed_W")
+            return self._summed_W
+        else:
+            self._summed_W = np.sum(self._W * self._inverse_mask_int)
+            self.W_sum_cache_up_to_date = True
+            print("-exit bartpy/bartpy/data.py TreatmentAssignment summed_W")
+            return self._summed_W
+
+    def update_W(self, W) -> None:
+        print("enter bartpy/bartpy/data.py TreatmentAssignment update_W")
+        
+        self._W = W
+        self.W_sum_cache_up_to_date = False
+        print("-exit bartpy/bartpy/data.py TreatmentAssignment update_W")
+
+    @property
+    def values(self):
+        print("enter bartpy/bartpy/data.py TreatmentAssignment values")
+        print("-exit bartpy/bartpy/data.py TreatmentAssignment values")
+        return self._W
+
+
 class Data(object):
     """
     Encapsulates the data within a split of feature space.
@@ -402,7 +493,11 @@ class Data(object):
                  unique_columns: List[int]=None,
                  splittable_variables: Optional[List[Optional[bool]]]=None,
                  y_sum: float=None,
-                 n_obsv: int=None):
+                 n_obsv: int=None,
+                 W: np.ndarray=None,
+                 W_sum: float=None,
+                 p: np.ndarray=None,
+                 p_sum: float=None,):
         print("enter bartpy/bartpy/data.py Data __init__")
         
         if mask is None:
@@ -416,8 +511,22 @@ class Data(object):
 
         self._X = CovariateMatrix(X, mask, n_obsv, unique_columns, splittable_variables)
         self._y = Target(y, mask, n_obsv, normalize, y_sum)
+        self._W = TreatmentAssignment(W, mask, n_obsv, W_sum)
+        self._p = PropensityScore(p, mask, n_obsv, p_sum)
         print("-exit bartpy/bartpy/data.py Data __init__")
-
+    
+    @property
+    def W(self) -> np.ndarray:
+        print("enter bartpy/bartpy/data.py Data p")
+        print("-exit bartpy/bartpy/data.py Data p")
+        return self._W
+    
+    @property
+    def p(self) -> np.ndarray:
+        print("enter bartpy/bartpy/data.py Data p")
+        print("-exit bartpy/bartpy/data.py Data p")
+        return self._p
+    
     @property
     def y(self) -> Target:
         print("enter bartpy/bartpy/data.py Data y")
@@ -440,6 +549,16 @@ class Data(object):
         print("enter bartpy/bartpy/data.py Data update_y")
         self._y.update_y(y)
         print("-exit bartpy/bartpy/data.py Data update_y")
+
+    def update_p(self, p: np.ndarray) -> None:
+        print("enter bartpy/bartpy/data.py Data update_p")
+        self._p.update_p(p)
+        print("-exit bartpy/bartpy/data.py Data update_p")
+        
+    def update_W(self, W: np.ndarray) -> None:
+        print("enter bartpy/bartpy/data.py Data update_W")
+        self._W.update_W(W)
+        print("-exit bartpy/bartpy/data.py Data update_W")
 
     def __add__(self, other: SplitCondition) -> 'Data':
         print("enter bartpy/bartpy/data.py Data __add__")

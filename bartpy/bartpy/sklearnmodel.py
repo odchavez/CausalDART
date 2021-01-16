@@ -3,16 +3,17 @@ from typing import List, Callable, Mapping, Union, Optional
 
 import numpy as np
 import pandas as pd
+
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, BaseEstimator
 
 from bartpy.bartpy.data import Data
 from bartpy.bartpy.initializers.initializer import Initializer
 from bartpy.bartpy.initializers.sklearntreeinitializer import SklearnTreeInitializer
-from bartpy.bartpy.model import Model
+from bartpy.bartpy.model import Model, ModelCGM
 from bartpy.bartpy.samplers.leafnode import LeafNodeSampler
-from bartpy.bartpy.samplers.modelsampler import ModelSampler, Chain
-from bartpy.bartpy.samplers.schedule import SampleSchedule
+from bartpy.bartpy.samplers.modelsampler import ModelSampler, ModelSamplerCGM, Chain
+from bartpy.bartpy.samplers.schedule import SampleSchedule, SampleScheduleCGM
 from bartpy.bartpy.samplers.sigma import SigmaSampler
 from bartpy.bartpy.samplers.treemutation import TreeMutationSampler
 from bartpy.bartpy.samplers.unconstrainedtree.treemutation import get_tree_sampler
@@ -104,29 +105,59 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  store_acceptance_trace: bool=False,
                  tree_sampler: TreeMutationSampler=get_tree_sampler(0.5, 0.5),
                  initializer: Optional[Initializer]=None,
-                 n_jobs=-1):
+                 n_jobs=-1,
+                 **kwargs
+                ):
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel __init__")
-        self.n_trees = n_trees
-        self.n_chains = n_chains
-        self.sigma_a = sigma_a
-        self.sigma_b = sigma_b
-        self.n_burn = n_burn
-        self.n_samples = n_samples
-        self.p_grow = 0.5
-        self.p_prune = 0.5
-        self.alpha = alpha
-        self.beta = beta
-        self.thin = thin
-        self.n_jobs = n_jobs
-        self.store_in_sample_predictions = store_in_sample_predictions
-        self.store_acceptance_trace = store_acceptance_trace
-        self.columns = None
-        self.tree_sampler = tree_sampler
-        self.initializer = initializer
-        self.schedule = SampleSchedule(self.tree_sampler, LeafNodeSampler(), SigmaSampler())
-        self.sampler = ModelSampler(self.schedule)
-
-        self.sigma, self.data, self.model, self._prediction_samples, self._model_samples, self.extract = [None] * 6
+        
+        if "model" in kwargs:
+            if kwargs["model"] == 'causal_gaussian_mixture':
+                print("Causal Gaussian Mixture using Transformed Outcomes...")
+                self.n_trees = n_trees
+                self.n_chains = n_chains
+                self.sigma_a = sigma_a
+                self.sigma_b = sigma_b
+                self.n_burn = n_burn
+                self.n_samples = n_samples
+                self.p_grow = 0.5
+                self.p_prune = 0.5
+                self.alpha = alpha
+                self.beta = beta
+                self.thin = thin
+                self.n_jobs = n_jobs
+                self.store_in_sample_predictions = store_in_sample_predictions
+                self.store_acceptance_trace = store_acceptance_trace
+                self.columns = None
+                #self.tree_sampler_g = get_tree_sampler(0.5, 0.5)
+                #self.tree_sampler_h = get_tree_sampler(0.5, 0.5)
+                self.tree_sampler = tree_sampler
+                self.initializer = initializer
+                self.schedule = SampleScheduleCGM(self.tree_sampler, LeafNodeSampler(), SigmaSampler())
+                self.sampler = ModelSamplerCGM(self.schedule)
+                self.sigma, self.data, self.model, self._prediction_samples, self._model_samples_cgm, self.extract = [None] * 6
+            
+        else:
+            self.n_trees = n_trees
+            self.n_chains = n_chains
+            self.sigma_a = sigma_a
+            self.sigma_b = sigma_b
+            self.n_burn = n_burn
+            self.n_samples = n_samples
+            self.p_grow = 0.5
+            self.p_prune = 0.5
+            self.alpha = alpha
+            self.beta = beta
+            self.thin = thin
+            self.n_jobs = n_jobs
+            self.store_in_sample_predictions = store_in_sample_predictions
+            self.store_acceptance_trace = store_acceptance_trace
+            self.columns = None
+            self.tree_sampler = tree_sampler
+            self.initializer = initializer
+            self.schedule = SampleSchedule(self.tree_sampler, LeafNodeSampler(), SigmaSampler())
+            self.sampler = ModelSampler(self.schedule)
+            self.sigma, self.data, self.model, self._prediction_samples, self._model_samples, self.extract = [None] * 6
+        
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel __init__") 
         
     def fit(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray) -> 'SklearnModel':
@@ -155,7 +186,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel fit")
         return self
     
-def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, p: np.ndarray) -> 'SklearnModel':
+    def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, W: np.ndarray, p: np.ndarray) -> 'SklearnModel':
         """
         Learn the model based on training data
 
@@ -165,6 +196,8 @@ def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, p: np.ndarr
             training covariates
         y: np.ndarray
             training targets
+        W: np.ndarray
+            Indicator (0 or 1) indicating Treatment Assignment
         p: np.ndarray
             propensity scores
             
@@ -175,10 +208,10 @@ def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, p: np.ndarr
         """
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel fit_CGM")
 
-        self.model = self._construct_model(X, y)
-        self.extract = Parallel(n_jobs=self.n_jobs)(self.f_delayed_chains(X, y))
+        self.model = self._construct_model_cgm(X, y, W, p) #this will need to be self._construct_model_cgm(X,y,p)
+        self.extract = Parallel(n_jobs=self.n_jobs)(self.f_delayed_chains_cgm(X, y, W, p))
         self.combined_chains = self._combine_chains(self.extract)
-        self._model_samples, self._prediction_samples = self.combined_chains["model"], self.combined_chains["in_sample_predictions"]
+        self._model_samples_cgm, self._prediction_samples = self.combined_chains["model"], self.combined_chains["in_sample_predictions"]
         self._acceptance_trace = self.combined_chains["acceptance"]
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel fit_CGM")
         return self
@@ -203,6 +236,17 @@ def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, p: np.ndarr
         output = Data(deepcopy(X), deepcopy(y), normalize=True)
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _convert_covariates_to_data")
         return output
+    
+    @staticmethod
+    def _convert_covariates_to_data_cgm(X: np.ndarray, y: np.ndarray, W:np.ndarray, p: np.ndarray) -> Data:
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _convert_covariates_to_data_cgm")
+        from copy import deepcopy
+        if type(X) == pd.DataFrame:
+            X: pd.DataFrame = X
+            X = X.values
+        output = Data(deepcopy(X), deepcopy(y), W=deepcopy(W), p=deepcopy(p) , normalize=True)
+        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _convert_covariates_to_data_cgm")
+        return output
 
     def _construct_model(self, X: np.ndarray, y: np.ndarray) -> Model:
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _construct_model")
@@ -219,6 +263,25 @@ def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, p: np.ndarr
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _construct_model")
         return self.model
 
+    def _construct_model_cgm(self, X: np.ndarray, y: np.ndarray, W:np.ndarray, p:np.ndarray) -> ModelCGM:
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _construct_model_cgm")
+        if len(X) == 0 or X.shape[1] == 0:
+            raise ValueError("Empty covariate matrix passed")
+        self.data = self._convert_covariates_to_data_cgm(X, y, W, p)
+        #self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+        self.sigma_g = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+        self.sigma_h = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+        self.model = ModelCGM(self.data,
+                           self.sigma_g,
+                           self.sigma_h,
+                           n_trees_g=self.n_trees,
+                           n_trees_h=self.n_trees,
+                           alpha=self.alpha,
+                           beta=self.beta,
+                           initializer=self.initializer)
+        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _construct_model_cgm")
+        return self.model
+    
     def f_delayed_chains(self, X: np.ndarray, y: np.ndarray):
         """
         Access point for getting access to delayed methods for running chains
@@ -239,6 +302,31 @@ def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, p: np.ndarr
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel f_delayed_chains")
         output = [delayed(x)(self, X, y) for x in self.f_chains()]
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel f_delayed_chains")
+        return output
+    
+    def f_delayed_chains_cgm(self, X: np.ndarray, y: np.ndarray, W:np.ndarray, p:np.ndarray):
+        """
+        Access point for getting access to delayed methods for running chains
+        Useful for when you want to run multiple instances of the model in parallel
+        e.g. when calculating a null distribution for feature importance
+
+        Parameters
+        ----------
+        X: np.ndarray
+            Covariate matrix
+        y: np.ndarray
+            Target array
+        W: np.ndarray
+            Treatment Assignment Indicators
+        p: np.ndarray
+            Propensity Scores
+        Returns
+        -------
+        List[Callable[[], ChainExtract]]
+        """
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel f_delayed_chains_cgm")
+        output = [delayed(x)(self, X, y, W, p) for x in self.f_chains()] # this is will run )consturct_model, NOT _construct_model_cgm
+        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel f_delayed_chains_cgm")
         return output
 
     def f_chains(self) -> List[Callable[[], Chain]]:
@@ -285,6 +373,37 @@ def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, p: np.ndarr
                 "In sample predictions only possible if model.store_in_sample_predictions is `True`.  Either set the parameter to True or pass a non-None X parameter")
         else:
             output = self._out_of_sample_predict(X)
+            print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
+            return output
+        
+    def predict_cgm(self, X: np.ndarray=None) -> np.ndarray:
+        """
+        Predict the target corresponding to the provided covariate matrix
+        If X is None, will predict based on training covariates
+
+        Prediction is based on the mean of all samples
+
+        Parameters
+        ----------
+        X: pd.DataFrame
+            covariates to predict from
+
+        Returns
+        -------
+        np.ndarray
+            predictions for the X covariates
+        """
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel predict")
+        if X is None and self.store_in_sample_predictions:
+            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples, axis=0))
+            print("exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
+            return output
+        elif X is None and not self.store_in_sample_predictions:
+            
+            raise ValueError(
+                "In sample predictions only possible if model.store_in_sample_predictions is `True`.  Either set the parameter to True or pass a non-None X parameter")
+        else:
+            output = self._out_of_sample_predict_cgm(X)
             print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
             return output
 
@@ -361,9 +480,15 @@ def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, p: np.ndarr
         output = self.data.y.unnormalize_y(np.mean([x.predict(X) for x in self._model_samples], axis=0))
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict")
         return output
+    
+    def _out_of_sample_predict_cgm(self, X):
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_cgm")
+        output = self.data.y.unnormalize_y(np.mean([x.predict(X) for x in self._model_samples_cgm], axis=0))
+        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_cgm")
+        return output
 
     def fit_predict(self, X, y):
-        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict")
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel fit_predict")
         self.fit(X, y)
         if self.store_in_sample_predictions:
             output = self.predict()
@@ -392,7 +517,26 @@ def fit_CGM(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, p: np.ndarr
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel model_samples")
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel model_samples")
         return self._model_samples
+    
+    @property
+    def model_samples_cgm(self) -> List[ModelCGM]:
+        """
+        Array of the model as it was after each sample.
+        Useful for examining for:
 
+         - examining the state of trees, nodes and sigma throughout the sampling
+         - out of sample prediction
+
+        Returns None if the model hasn't been fit
+
+        Returns
+        -------
+        List[ModelCGM]
+        """
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel model_samples")
+        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel model_samples")
+        return self._model_samples_cgm
+    
     @property
     def acceptance_trace(self) -> List[Mapping[str, float]]:
         """
