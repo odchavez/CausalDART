@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from typing import Optional
 
-from bartpy.bartpy.model import Model
+from bartpy.bartpy.model import Model, ModelCGM
 from bartpy.bartpy.mutation import TreeMutation
 from bartpy.bartpy.samplers.sampler import Sampler
 from bartpy.bartpy.tree import Tree
@@ -85,6 +85,56 @@ class TreeMutationLikihoodRatio(ABC):
         print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio")
         return output
 
+    def log_probability_ratio_cgm_g(self, model: ModelCGM, tree: Tree, mutation: TreeMutation) -> float:
+        """
+        Calculated the ratio of the likihood of a mutation over the likihood of the reverse movement
+
+        Main access point for the class
+
+        Parameters
+        ----------
+        model: Model
+            The overall model object the tree belongs to
+        tree: Tree
+            The tree being changed
+        mutation: TreeMutation
+            The proposed mutation
+
+        Returns
+        -------
+        float
+            logged ratio of likelihoods
+        """
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_g")
+        output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio_cgm_g(model, tree, mutation) + self.log_tree_ratio_cgm(model, tree, mutation)
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_g")
+        return output
+
+    def log_probability_ratio_cgm_h(self, model: ModelCGM, tree: Tree, mutation: TreeMutation) -> float:
+        """
+        Calculated the ratio of the likihood of a mutation over the likihood of the reverse movement
+
+        Main access point for the class
+
+        Parameters
+        ----------
+        model: Model
+            The overall model object the tree belongs to
+        tree: Tree
+            The tree being changed
+        mutation: TreeMutation
+            The proposed mutation
+
+        Returns
+        -------
+        float
+            logged ratio of likelihoods
+        """
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_h")
+        output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio_cgm_h(model, tree, mutation) + self.log_tree_ratio_cgm(model, tree, mutation)
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_h")
+        return output
+    
     @abstractmethod
     def log_transition_ratio(self, tree: Tree, mutation: TreeMutation) -> float:
         """
@@ -133,6 +183,30 @@ class TreeMutationLikihoodRatio(ABC):
         print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio")
 
     @abstractmethod
+    def log_tree_ratio_cgm(self, model: ModelCGM, tree: Tree, mutation: TreeMutation) -> float:
+        """
+        Logged ratio of the likihood of the tree before and after the mutation
+        i.e. the product of the probability of all split nodes being split and all leaf node note being split
+
+        Parameters
+        ----------
+        model: ModelCGM
+            The model the tree to be changed is part of
+        tree: Tree
+            The tree being changed
+        mutation: TreeMutation
+            the proposed mutation
+
+        Returns
+        -------
+        float
+            logged likihood ratio
+        """
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio_cgm")
+        raise NotImplementedError()
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio_cgm")
+        
+    @abstractmethod
     def log_likihood_ratio(self, model: Model, tree: Tree, mutation: TreeMutation):
         """
         The logged ratio of the likihood of all the data points before and after the mutation
@@ -156,3 +230,50 @@ class TreeMutationLikihoodRatio(ABC):
         raise NotImplementedError()
         print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio")
         
+    @abstractmethod
+    def log_likihood_ratio_cgm_g(self, model: ModelCGM, tree: Tree, mutation: TreeMutation):
+        """
+        The logged ratio of the likihood of all the data points before and after the mutation
+        Generally more complex trees should be able to fit the data better than simple trees
+
+        Parameters
+        ----------
+        model: ModelCGM
+            The model the tree to be changed is part of
+        tree: Tree
+            The tree being changed
+        mutation: TreeMutation
+            the proposed mutation
+
+        Returns
+        -------
+        float
+            logged likihood ratio
+        """
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_g")
+        raise NotImplementedError()
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_g")
+    
+    @abstractmethod
+    def log_likihood_ratio_cgm_h(self, model: ModelCGM, tree: Tree, mutation: TreeMutation):
+        """
+        The logged ratio of the likihood of all the data points before and after the mutation
+        Generally more complex trees should be able to fit the data better than simple trees
+
+        Parameters
+        ----------
+        model: ModelCGM
+            The model the tree to be changed is part of
+        tree: Tree
+            The tree being changed
+        mutation: TreeMutation
+            the proposed mutation
+
+        Returns
+        -------
+        float
+            logged likihood ratio
+        """
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_h")
+        raise NotImplementedError()
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_h")

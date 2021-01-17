@@ -1,6 +1,6 @@
 from typing import Optional
 
-from bartpy.bartpy.model import Model
+from bartpy.bartpy.model import Model, ModelCGM
 from bartpy.bartpy.mutation import TreeMutation
 from bartpy.bartpy.samplers.sampler import Sampler
 from bartpy.bartpy.samplers.scalar import UniformScalarSampler
@@ -48,6 +48,29 @@ class UnconstrainedTreeMutationSampler(Sampler):
         else:
             print("-exit /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler sample")
             return None
+    def sample_cgm_g(self, model: ModelCGM, tree: Tree) -> Optional[TreeMutation]:
+        print("enter /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler sample_cgm_g")
+        proposal = self.proposer.propose(tree)
+        ratio = self.likihood_ratio.log_probability_ratio_cgm_g(model, tree, proposal)
+        
+        if self._scalar_sampler.sample() < ratio:
+            print("-exit /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler sample_cgm_g")
+            return proposal
+        else:
+            print("-exit /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler sample_cgm_g")
+            return None
+    
+    def sample_cgm_h(self, model: ModelCGM, tree: Tree) -> Optional[TreeMutation]:
+        print("enter /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler sample_cgm_h")
+        proposal = self.proposer.propose(tree)
+        ratio = self.likihood_ratio.log_probability_ratio_cgm_h(model, tree, proposal)
+        
+        if self._scalar_sampler.sample() < ratio:
+            print("-exit /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler sample_cgm_h")
+            return proposal
+        else:
+            print("-exit /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler sample_cgm_h")
+            return None
 
     def step(self, model: Model, tree: Tree) -> Optional[TreeMutation]:
         print("enter /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler step")
@@ -55,6 +78,22 @@ class UnconstrainedTreeMutationSampler(Sampler):
         if mutation is not None:
             mutate(tree, mutation)
         print("-exit /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler step")
+        return mutation
+    
+    def step_cgm_g(self, model: ModelCGM, tree: Tree) -> Optional[TreeMutation]:
+        print("enter /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler step_cgm_g")
+        mutation = self.sample_cgm_g(model, tree)
+        if mutation is not None:
+            mutate(tree, mutation)
+        print("-exit /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler step_cgm_g")
+        return mutation
+    
+    def step_cgm_h(self, model: ModelCGM, tree: Tree) -> Optional[TreeMutation]:
+        print("enter /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler step_cgm_h")
+        mutation = self.sample_cgm_h(model, tree)
+        if mutation is not None:
+            mutate(tree, mutation)
+        print("-exit /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler step_cgm_h")
         return mutation
 
 

@@ -280,12 +280,19 @@ class ModelCGM:
         print("-exit bartpy/bartpy/model.py ModelCGM refreshed_trees_h")
 
     @property
-    def sigma_m(self) -> float:
-        print("enter bartpy/bartpy/model.py ModelCGM sigma_m")
-        output = 0.5 / (self.k * np.power(self.n_trees, 0.5))
-        print("-exit bartpy/bartpy/model.py ModelCGM sigma_m")
+    def sigma_g_m(self) -> float:
+        print("enter bartpy/bartpy/model.py ModelCGM sigma_g_m")
+        output = 0.5 / (self.k * np.power(self.n_trees_g, 0.5))
+        print("-exit bartpy/bartpy/model.py ModelCGM sigma_g_m")
         return output
 
+    @property
+    def sigma_h_m(self) -> float:
+        print("enter bartpy/bartpy/model.py ModelCGM sigma_h_m")
+        output = 0.5 / (self.k * np.power(self.n_trees_h, 0.5))
+        print("-exit bartpy/bartpy/model.py ModelCGM sigma_h_m")
+        return output
+    
     @property
     def sigma_g(self) -> Sigma:
         print("enter bartpy/bartpy/model.py ModelCGM sigma_g")
