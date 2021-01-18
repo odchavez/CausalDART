@@ -1,6 +1,6 @@
 import numpy as np
 
-from bartpy.bartpy.model import Model
+from bartpy.bartpy.model import Model, ModelCGM
 from bartpy.bartpy.node import LeafNode
 from bartpy.bartpy.samplers.sampler import Sampler
 from bartpy.bartpy.samplers.scalar import NormalScalarSampler
@@ -26,6 +26,20 @@ class LeafNodeSampler(Sampler):
         node.set_value(sampled_value)
         print("-exit bartpy/bartpy/samplers/leafnode.py LeafNodeSampler step")
         return sampled_value
+    
+    def step_cgm_g(self, model: ModelCGM, node: LeafNode) -> float:
+        print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler step_cgm_g")
+        sampled_value = self.sample_cgm_g(model, node)
+        node.set_value(sampled_value)
+        print("-exit bartpy/bartpy/samplers/leafnode.py LeafNodeSampler step_cgm_g")
+        return sampled_value
+    
+    def step_cgm_h(self, model: ModelCGM, node: LeafNode) -> float:
+        print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler step_cgm_h")
+        sampled_value = self.sample_cgm_h(model, node)
+        node.set_value(sampled_value)
+        print("-exit bartpy/bartpy/samplers/leafnode.py LeafNodeSampler step_cgm_h")
+        return sampled_value
 
     def sample(self, model: Model, node: LeafNode) -> float:
         print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample")
@@ -39,6 +53,29 @@ class LeafNodeSampler(Sampler):
         print("-exit bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample")
         return output
 
+    def sample_cgm_g(self, model: ModelCGM, node: LeafNode) -> float:
+        print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_g")
+        prior_var = model.sigma_g_m ** 2
+        n = node.data.X.n_obsv
+        likihood_var = (model.sigma_g.current_value() ** 2) / n
+        likihood_mean = node.data.y.summed_y() / n
+        posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
+        posterior_mean = likihood_mean * (prior_var / (likihood_var + prior_var))
+        output = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees_g, 0.5))
+        print("-exit bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_g")
+        return output
+
+    def sample_cgm_h(self, model: ModelCGM, node: LeafNode) -> float:
+        print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_h")
+        prior_var = model.sigma_h_m ** 2
+        n = node.data.X.n_obsv
+        likihood_var = (model.sigma_h.current_value() ** 2) / n
+        likihood_mean = node.data.y.summed_y() / n
+        posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
+        posterior_mean = likihood_mean * (prior_var / (likihood_var + prior_var))
+        output = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees_h, 0.5))
+        print("-exit bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_h")
+        return output
 
 # class VectorizedLeafNodeSampler(Sampler):
 

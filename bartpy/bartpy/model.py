@@ -144,11 +144,12 @@ class ModelCGM:
         self.k = k
         self._sigma_g = sigma_g
         self._sigma_h = sigma_h
-        self._prediction = None
+        self._prediction_g = None
+        self._prediction_h = None
         self._initializer = initializer
 
         if trees_g is None:
-            print("in if trees is None")
+            print("in if trees_g is None")
             self.n_trees_g = n_trees_g
             self._trees_g = self.initialize_trees_g()
             if self._initializer is not None:
@@ -158,9 +159,9 @@ class ModelCGM:
             print("in else trees is not None")
             self.n_trees_g = len(trees_g)
             self._trees_g = trees_g
-            
+
         if trees_h is None:
-            print("in if trees is None")
+            print("in if trees_h is None")
             self.n_trees_h = n_trees_h
             self._trees_h = self.initialize_trees_h()
             if self._initializer is not None:
@@ -170,6 +171,11 @@ class ModelCGM:
             print("in else trees is not None")
             self.n_trees_h = len(trees_h)
             self._trees_h = trees_h
+        
+        print("self._trees_g=",self._trees_g)
+        print("self._trees_h=",self._trees_h)
+        print("type(self._trees_g)=",type(self._trees_g))
+        print("type(self._trees_h)=",type(self._trees_h))
         print("-exit bartpy/bartpy/model.py ModelCGM __init__")
 
     def initialize_trees_g(self) -> List[Tree]:
@@ -190,9 +196,17 @@ class ModelCGM:
         print("-exit bartpy/bartpy/model.py ModelCGM initialize_trees_h")
         return trees
 
-    def residuals(self) -> np.ndarray:
+    def residuals_g(self) -> np.ndarray:
+        print("enter bartpy/bartpy/model.py ModelCGM residuals_g")
+        print("self.predict_g()=",self.predict_g())
+        output = self.data.y.values - self.predict_g()
+        print("-exit bartpy/bartpy/model.py ModelCGM residuals_g")
+        return output
+
+    def residuals_h(self) -> np.ndarray:
         print("enter bartpy/bartpy/model.py ModelCGM residuals")
-        output = self.data.y.values - self.predict()
+        print("self.predict_h()=",self.predict_h())
+        output = self.data.y.values - self.predict_h()
         print("-exit bartpy/bartpy/model.py ModelCGM residuals")
         return output
 
@@ -202,25 +216,36 @@ class ModelCGM:
         print("-exit bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
         return output
 
-    def predict_g(self, X: np.ndarray=None) -> np.ndarray:
+    def predict(self, X: np.ndarray=None) -> np.ndarray:
         print("enter bartpy/bartpy/model.py ModelCGM predict_g")
-        
+        print("type(self.trees_g)=",type(self.trees_g))
         if X is not None:
             output = self._out_of_sample_predict_g(X)
             print("-exit bartpy/bartpy/model.py ModelCGM predict_g")
             return output
-        output = np.sum([tree.predict() for tree in self.trees_g], axis=0)
+        output = np.sum([tree.predict_g() for tree in self.trees_g], axis=0)
+        print("-exit bartpy/bartpy/model.py ModelCGM predict_g")
+        return output
+    
+    def predict_g(self, X: np.ndarray=None) -> np.ndarray:
+        print("enter bartpy/bartpy/model.py ModelCGM predict_g")
+        print("type(self.trees_g)=",type(self.trees_g))
+        if X is not None:
+            output = self._out_of_sample_predict_g(X)
+            print("-exit bartpy/bartpy/model.py ModelCGM predict_g")
+            return output
+        output = np.sum([tree.predict_g() for tree in self.trees_g], axis=0)
         print("-exit bartpy/bartpy/model.py ModelCGM predict_g")
         return output
     
     def predict_h(self, X: np.ndarray=None) -> np.ndarray:
         print("enter bartpy/bartpy/model.py ModelCGM predict_h")
-        
+        print("type(self.trees_h)=",type(self.trees_h))
         if X is not None:
             output = self._out_of_sample_predict_h(X)
             print("-exit bartpy/bartpy/model.py ModelCGM predict_h")
             return output
-        output = np.sum([tree.predict() for tree in self.trees_h], axis=0)
+        output = np.sum([tree.predict_h() for tree in self.trees_h], axis=0)
         print("-exit bartpy/bartpy/model.py ModelCGM predict_h")
         return output
 
@@ -250,6 +275,7 @@ class ModelCGM:
         print("-exit bartpy/bartpy/model.py ModelCGM trees_g")
         return self._trees_g
     
+    @property
     def trees_h(self) -> List[Tree]:
         print("enter bartpy/bartpy/model.py ModelCGM trees_h")
         print("-exit bartpy/bartpy/model.py ModelCGM trees_h")
@@ -258,25 +284,25 @@ class ModelCGM:
     def refreshed_trees_g(self) -> Generator[Tree, None, None]: # the internals of the this function will need to be thouroughly checked
         print("enter bartpy/bartpy/model.py ModelCGM refreshed_trees_g")
         
-        if self._prediction is None:
-            self._prediction = self.predict_g()
+        if self._prediction_g is None:
+            self._prediction_g = self.predict_g()
         for tree in self._trees_g:
-            self._prediction -= tree.predict()
-            tree.update_y(self.data.y.values - self._prediction)
+            self._prediction_g -= tree.predict_g()
+            tree.update_y(self.data.y.values - self._prediction_g)
             yield tree
-            self._prediction += tree.predict()
+            self._prediction_g += tree.predict_g()
         print("-exit bartpy/bartpy/model.py ModelCGM refreshed_trees_g")
         
     def refreshed_trees_h(self) -> Generator[Tree, None, None]: # the internals of the this function will need to be thouroughly checked
         print("enter bartpy/bartpy/model.py ModelCGM refreshed_trees_h")
         
-        if self._prediction is None:
-            self._prediction = self.predict_h()
+        if self._prediction_h is None:
+            self._prediction_h = self.predict_h()
         for tree in self._trees_h:
-            self._prediction -= tree.predict()
-            tree.update_y(self.data.y.values - self._prediction)
+            self._prediction_h -= tree.predict_h()
+            tree.update_y(self.data.y.values - self._prediction_h)
             yield tree
-            self._prediction += tree.predict()
+            self._prediction_h += tree.predict_h()
         print("-exit bartpy/bartpy/model.py ModelCGM refreshed_trees_h")
 
     @property

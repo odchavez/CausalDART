@@ -115,6 +115,52 @@ class Tree:
         print("-exit bartpy/bartpy/tree.py Tree")
         return self._prediction
 
+    def predict_g(self, X: np.ndarray=None) -> np.ndarray:
+        """
+        Generate a set of predictions with the same dimensionality as the target array
+        Note that the prediction is from one tree, so represents only (1 / number_of_trees) of the target
+        """
+        print("enter bartpy/bartpy/tree.py Tree predict_g")
+        
+        if X is not None:
+            output = self._out_of_sample_predict_cgm_g(X)
+            print("-exit bartpy/bartpy/tree.py Tree predict_g")
+            return output
+
+        if self.cache_up_to_date:
+            print("-exit bartpy/bartpy/tree.py Tree predict_g")
+            return self._prediction################################################
+        for leaf in self.leaf_nodes:
+            if self._prediction is None:################################################
+                self._prediction = np.zeros(self.nodes[0].data.X.n_obsv)################################################
+            self._prediction[leaf.split.condition()] = leaf.predict()################################################
+        self.cache_up_to_date = True
+        print("-exit bartpy/bartpy/tree.py Tree predict_g")
+        return self._prediction
+
+    def predict_h(self, X: np.ndarray=None) -> np.ndarray:
+        """
+        Generate a set of predictions with the same dimensionality as the target array
+        Note that the prediction is from one tree, so represents only (1 / number_of_trees) of the target
+        """
+        print("enter bartpy/bartpy/tree.py Tree predict_h")
+        
+        if X is not None:
+            output = self._out_of_sample_predict_cgm_h(X)
+            print("-exit bartpy/bartpy/tree.py Tree predict_h")
+            return output
+
+        if self.cache_up_to_date:
+            print("-exit bartpy/bartpy/tree.py Tree predict_h")
+            return self._prediction################################################
+        for leaf in self.leaf_nodes:
+            if self._prediction is None:################################################
+                self._prediction = np.zeros(self.nodes[0].data.X.n_obsv)################################################
+            self._prediction[leaf.split.condition()] = leaf.predict()################################################
+        self.cache_up_to_date = True
+        print("-exit bartpy/bartpy/tree.py Tree predict_h")
+        return self._prediction
+
     def _out_of_sample_predict(self, X) -> np.ndarray:
         """
         Prediction for a covariate matrix not used for training
@@ -134,6 +180,48 @@ class Tree:
         for leaf in self.leaf_nodes:
             prediction[leaf.split.condition(X)] = leaf.predict()
         print("-exit bartpy/bartpy/tree.py Tree _out_of_sample_predict")
+        return prediction
+
+    def _out_of_sample_predict_cgm_g(self, X) -> np.ndarray:
+        """
+        Prediction for a covariate matrix not used for training
+
+        Note that this is quite slow
+
+        Parameters
+        ----------
+        X: pd.DataFrame
+            Covariates to predict for
+        Returns
+        -------
+        np.ndarray
+        """
+        print("enter bartpy/bartpy/tree.py Tree _out_of_sample_predict_cgm_g")
+        prediction = np.array([0.] * len(X))
+        for leaf in self.leaf_nodes:
+            prediction[leaf.split.condition(X)] = leaf.predict()
+        print("-exit bartpy/bartpy/tree.py Tree _out_of_sample_predict_cgm_g")
+        return prediction
+
+    def _out_of_sample_predict_cgm_h(self, X) -> np.ndarray:
+        """
+        Prediction for a covariate matrix not used for training
+
+        Note that this is quite slow
+
+        Parameters
+        ----------
+        X: pd.DataFrame
+            Covariates to predict for
+        Returns
+        -------
+        np.ndarray
+        """
+        print("enter bartpy/bartpy/tree.py Tree _out_of_sample_predict_cgm_h")
+        prediction = np.array([0.] * len(X))
+        for leaf in self.leaf_nodes:
+            prediction[leaf.split.condition(X)] = leaf.predict()
+        print("-exit bartpy/bartpy/tree.py Tree _out_of_sample_predict_cgm_h")
         return prediction
 
     def remove_node(self, node: TreeNode) -> None:

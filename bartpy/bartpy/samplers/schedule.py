@@ -84,7 +84,7 @@ class SampleScheduleCGM:
         self.tree_sampler = tree_sampler
         print("-exit bartpy/bartpy/samplers/schedule.py SampleScheduleCGM __init__")
 
-    def steps(self, model: Model) -> Generator[Tuple[Text, Callable[[], float]], None, None]:
+    def steps(self, model: ModelCGM) -> Generator[Tuple[Text, Callable[[], float]], None, None]:
         """
         Create a generator of the steps that need to be called to complete a full Gibbs sample
 
@@ -103,12 +103,13 @@ class SampleScheduleCGM:
         for tree in model.refreshed_trees_g():
             yield "Tree", lambda: self.tree_sampler.step_cgm_g(model, tree)
             for leaf_node in tree.leaf_nodes:
-                yield "Node", lambda: self.leaf_sampler.step(model, leaf_node)
+                yield "Node", lambda: self.leaf_sampler.step_cgm_g(model, leaf_node)
+        yield "Node", lambda: self.sigma_sampler.step_cgm_g(model, model.sigma_g)
         
         # sample h and sigma_h
         for tree in model.refreshed_trees_h():
-            yield "Tree", lambda: self.tree_sampler.step_cgm_g(model, tree)
+            yield "Tree", lambda: self.tree_sampler.step_cgm_h(model, tree)
             for leaf_node in tree.leaf_nodes:
-                yield "Node", lambda: self.leaf_sampler.step(model, leaf_node)
-        yield "Node", lambda: self.sigma_sampler.step(model, model.sigma)
+                yield "Node", lambda: self.leaf_sampler.step_cgm_h(model, leaf_node)
+        yield "Node", lambda: self.sigma_sampler.step_cgm_h(model, model.sigma_h)
         print("-exit bartpy/bartpy/samplers/schedule.py SampleScheduleCGM steps")

@@ -141,7 +141,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             return output
         if mutation.kind == "prune":
             mutation: PruneMutation = mutation
-            output = self.log_tree_ratio_prune_cgm_g(model, mutation)
+            output = self.log_tree_ratio_prune_cgm(model, mutation)
             print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
                   "UniformTreeMutationLikihoodRatio log_tree_ratio_cgm")
             return output
@@ -380,6 +380,36 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
               "UniformTreeMutationLikihoodRatio log_tree_ratio_prune")
         return output
 
+    @staticmethod
+    def log_tree_ratio_prune_cgm(model: ModelCGM, proposal: PruneMutation):
+        print("enter bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
+              "UniformTreeMutationLikihoodRatio log_tree_ratio_prune_cgm")
+        numerator = log_probability_node_not_split(model, proposal.updated_node)
+
+        prob_left_not_split = log_probability_node_not_split(
+            model, proposal.existing_node.left_child
+        )
+        prob_right_not_split = log_probability_node_not_split(
+            model, proposal.existing_node.left_child
+        )
+        prob_updated_node_split = log_probability_node_split(
+            model, proposal.existing_node
+        )
+        prob_chosen_split = log_probability_split_within_node(
+            GrowMutation(proposal.updated_node, 
+                         proposal.existing_node
+                        )
+        )
+        denominator = (
+            prob_left_not_split + 
+            prob_right_not_split + 
+            prob_updated_node_split + 
+            prob_chosen_split
+        )
+        output = numerator - denominator
+        print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
+              "UniformTreeMutationLikihoodRatio log_tree_ratio_prune_cgm")
+        return output
 
 def n_prunable_decision_nodes(tree: Tree) -> int:
     """
