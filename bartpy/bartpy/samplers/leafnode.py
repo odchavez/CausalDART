@@ -55,6 +55,8 @@ class LeafNodeSampler(Sampler):
 
     def sample_cgm_g(self, model: ModelCGM, node: LeafNode) -> float:
         print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_g")
+        print("######################################################################### node.data.X.n_obsv:", node.data.X.n_obsv)
+        print("######################################################################### node.data.X.n_obsv:", node.data.X.values.shape)
         prior_var = model.sigma_g_m ** 2
         n = node.data.X.n_obsv
         likihood_var = (model.sigma_g.current_value() ** 2) / n

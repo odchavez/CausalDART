@@ -51,6 +51,38 @@ class TreeNode(object):
             self.left_child.update_y(y)
             self.right_child.update_y(y)
         print("-exit bartpy/bartpy/node.py TreeNode update_y")
+
+    def update_y_tilde_g(self, y_tilde_g):
+        print("enter bartpy/bartpy/node.py TreeNode update_y_tilde_g")
+        self.data.update_y_tilde_g(y_tilde_g)
+        if self.left_child is not None:
+            self.left_child.update_y_tilde_g(y_tilde_g)
+            self.right_child.update_y_tilde_g(y_tilde_g)
+        print("-exit bartpy/bartpy/node.py TreeNode update_y_tilde_g")
+
+    def update_y_tilde_h(self, y_tilde_h):
+        print("enter bartpy/bartpy/node.py TreeNode update_y_tilde_h")
+        self.data.update_y_tilde_h(y_tilde_h)
+        if self.left_child is not None:
+            self.left_child.update_y_tilde_h(y_tilde_h)
+            self.right_child.update_y_tilde_h(y_tilde_h)
+        print("-exit bartpy/bartpy/node.py TreeNode update_y_tilde_h")
+
+    def update_W(self, W):
+        print("enter bartpy/bartpy/node.py TreeNode update_W")
+        self.data.update_W(W)
+        if self.left_child is not None:
+            self.left_child.update_W(W)
+            self.right_child.update_W(W)
+        print("-exit bartpy/bartpy/node.py TreeNode update_W")
+        
+    def update_p(self, p):
+        print("enter bartpy/bartpy/node.py TreeNode update_p")
+        self.data.update_p(p)
+        if self.left_child is not None:
+            self.left_child.update_p(p)
+            self.right_child.update_p(p)
+        print("-exit bartpy/bartpy/node.py TreeNode update_p")
         
 
 
@@ -124,7 +156,18 @@ def split_node(node: LeafNode, split_conditions: Tuple[SplitCondition, SplitCond
     left_split = node.split + split_conditions[0]
     split_conditions[1].carry_n_obsv = node.data.X.n_obsv - left_split.data.X.n_obsv
     split_conditions[1].carry_y_sum = node.data.y.summed_y() - left_split.data.y.summed_y()
-
+    
+    #if (node.data.W is not None) and (node.data.p is not None):
+    #    print("node.data.W is not None=", node.data.W is not None)
+    #    split_conditions[1].carry_W_sum = node.data.W.summed_W() - left_split.data.W.summed_W()
+    #    split_conditions[1].carry_p_sum = node.data.p.summed_p() - left_split.data.p.summed_p()
+    #    split_conditions[1].carry_y_tilde_g_sum = (
+    #        node.data.y_tilde_g.summed_y_tilde_g() - left_split.data.y_tilde_g.summed_y_tilde_g()
+    #    )
+    #    #split_conditions[1].carry_y_tilde_h_sum = (
+    #    #    node.data.y_tilde_h.summed_y_tilde_h() - left_split.data.y_tilde_h.summed_y_tilde_h()
+    #    #)
+        
     right_split = node.split + split_conditions[1]
     output = DecisionNode(node.split,
                         LeafNode(left_split, depth=node.depth + 1),

@@ -81,7 +81,7 @@ class Tree:
         print("-exit bartpy/bartpy/tree.py Tree prunable_decision_nodes")
         return output
 
-    def update_y(self, y: np.ndarray) -> None:
+    def update_y(self, y: np.ndarray) -> None: ############################### PASS IN SUM OF ALL OTHER TREES...
         """
         Update the cached value of the target array in all nodes
         Used to pass in the residuals from the sum of all of the other trees
@@ -92,7 +92,51 @@ class Tree:
             node.update_y(y)
         print("-exit bartpy/bartpy/tree.py Tree update_y")
         
-    def predict(self, X: np.ndarray=None) -> np.ndarray:
+    def update_y_tilde_g(self, y_tilde_g: np.ndarray) -> None: ############################### PASS IN SUM OF ALL OTHER TREES...
+        """
+        Update the cached value of the target array in all nodes
+        Used to pass in the residuals from the sum of all of the other trees
+        """
+        print("enter bartpy/bartpy/tree.py Tree update_y_tilde_g")
+        self.cache_up_to_date = False
+        for node in self.nodes:
+            node.update_y_tilde_g(y_tilde_g)
+        print("-exit bartpy/bartpy/tree.py Tree update_y_tilde_g")
+        
+    def update_y_tilde_h(self, y_tilde_h: np.ndarray) -> None: ############################### PASS IN SUM OF ALL OTHER TREES...
+        """
+        Update the cached value of the target array in all nodes
+        Used to pass in the residuals from the sum of all of the other trees
+        """
+        print("enter bartpy/bartpy/tree.py Tree update_y_tilde_h")
+        self.cache_up_to_date = False
+        for node in self.nodes:
+            node.update_y_tilde_h(y_tilde_h)
+        print("-exit bartpy/bartpy/tree.py Tree update_y_tilde_h")
+        
+    def update_W(self, W: np.ndarray) -> None: ############################### PASS IN SUM OF ALL OTHER TREES...
+        """
+        Update the cached value of the target array in all nodes
+        Used to pass in the residuals from the sum of all of the other trees
+        """
+        print("enter bartpy/bartpy/tree.py Tree update_W")
+        self.cache_up_to_date = False
+        for node in self.nodes:
+            node.update_W(W)
+        print("-exit bartpy/bartpy/tree.py Tree update_W")
+        
+    def update_p(self, p: np.ndarray) -> None: ############################### PASS IN SUM OF ALL OTHER TREES...
+        """
+        Update the cached value of the target array in all nodes
+        Used to pass in the residuals from the sum of all of the other trees
+        """
+        print("enter bartpy/bartpy/tree.py Tree update_p")
+        self.cache_up_to_date = False
+        for node in self.nodes:
+            node.update_p(p)
+        print("-exit bartpy/bartpy/tree.py Tree update_p")
+        
+    def predict(self, X: np.ndarray=None) -> np.ndarray: ############################### PREDICT FROM SINGLE TREE...
         """
         Generate a set of predictions with the same dimensionality as the target array
         Note that the prediction is from one tree, so represents only (1 / number_of_trees) of the target
@@ -129,11 +173,11 @@ class Tree:
 
         if self.cache_up_to_date:
             print("-exit bartpy/bartpy/tree.py Tree predict_g")
-            return self._prediction################################################
+            return self._prediction
         for leaf in self.leaf_nodes:
-            if self._prediction is None:################################################
-                self._prediction = np.zeros(self.nodes[0].data.X.n_obsv)################################################
-            self._prediction[leaf.split.condition()] = leaf.predict()################################################
+            if self._prediction is None:
+                self._prediction = np.zeros(self.nodes[0].data.X.n_obsv)
+            self._prediction[leaf.split.condition()] = leaf.predict()
         self.cache_up_to_date = True
         print("-exit bartpy/bartpy/tree.py Tree predict_g")
         return self._prediction
@@ -152,11 +196,11 @@ class Tree:
 
         if self.cache_up_to_date:
             print("-exit bartpy/bartpy/tree.py Tree predict_h")
-            return self._prediction################################################
+            return self._prediction
         for leaf in self.leaf_nodes:
-            if self._prediction is None:################################################
-                self._prediction = np.zeros(self.nodes[0].data.X.n_obsv)################################################
-            self._prediction[leaf.split.condition()] = leaf.predict()################################################
+            if self._prediction is None:
+                self._prediction = np.zeros(self.nodes[0].data.X.n_obsv)
+            self._prediction[leaf.split.condition()] = leaf.predict()
         self.cache_up_to_date = True
         print("-exit bartpy/bartpy/tree.py Tree predict_h")
         return self._prediction

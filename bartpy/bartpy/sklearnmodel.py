@@ -233,9 +233,9 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             self with trained parameter values
         """
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel fit_CGM")
-
-        self.model = self._construct_model_cgm(X, y, W, p) #this will need to be self._construct_model_cgm(X,y,p)
-        self.extract = Parallel(n_jobs=self.n_jobs)(self.f_delayed_chains_cgm(X, y, W, p))
+        y_i_star = y*(W-p)/(p*(1-p))
+        self.model = self._construct_model_cgm(X, y_i_star, W, p) #this will need to be self._construct_model_cgm(X,y,p)
+        self.extract = Parallel(n_jobs=self.n_jobs)(self.f_delayed_chains_cgm(X, y_i_star, W, p))
         self.combined_chains = self._combine_chains(self.extract)
         self._model_samples_cgm, self._prediction_samples = self.combined_chains["model"], self.combined_chains["in_sample_predictions"]
         self._acceptance_trace = self.combined_chains["acceptance"]
@@ -418,7 +418,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
             return output
         
-    def predict_cgm(self, X: np.ndarray=None) -> np.ndarray:
+    def predict_CATE(self, X: np.ndarray=None) -> np.ndarray:
         """
         Predict the target corresponding to the provided covariate matrix
         If X is None, will predict based on training covariates
@@ -445,7 +445,38 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             raise ValueError(
                 "In sample predictions only possible if model.store_in_sample_predictions is `True`.  Either set the parameter to True or pass a non-None X parameter")
         else:
-            output = self._out_of_sample_predict_cgm(X)
+            output = self._out_of_sample_predict_cate(X)
+            print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
+            return output
+        
+    def predict_response(self, X: np.ndarray=None) -> np.ndarray:
+        """
+        Predict the target corresponding to the provided covariate matrix
+        If X is None, will predict based on training covariates
+
+        Prediction is based on the mean of all samples
+
+        Parameters
+        ----------
+        X: pd.DataFrame
+            covariates to predict from
+
+        Returns
+        -------
+        np.ndarray
+            predictions for the X covariates
+        """
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel predict")
+        if X is None and self.store_in_sample_predictions:
+            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples, axis=0))
+            print("exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
+            return output
+        elif X is None and not self.store_in_sample_predictions:
+            
+            raise ValueError(
+                "In sample predictions only possible if model.store_in_sample_predictions is `True`.  Either set the parameter to True or pass a non-None X parameter")
+        else:
+            output = self._out_of_sample_predict_response(X)
             print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
             return output
 
@@ -523,10 +554,16 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict")
         return output
     
-    def _out_of_sample_predict_cgm(self, X):
-        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_cgm")
-        output = self.data.y.unnormalize_y(np.mean([x.predict(X) for x in self._model_samples_cgm], axis=0))
-        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_cgm")
+    def _out_of_sample_predict_cate(self, X):
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_cate")
+        output = self.data.y.unnormalize_y(np.mean([x.predict_g(X) for x in self._model_samples_cgm], axis=0))
+        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_cate")
+        return output
+    
+    def _out_of_sample_predict_response(self, X):
+        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_response")
+        output = self.data.y.unnormalize_y(np.mean([x.predict_h(X) for x in self._model_samples_cgm], axis=0))
+        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_response")
         return output
 
     def fit_predict(self, X, y):

@@ -180,7 +180,6 @@ class ModelCGM:
 
     def initialize_trees_g(self) -> List[Tree]:
         print("enter bartpy/bartpy/model.py ModelCGM initialize_trees_g")
-        
         trees = [Tree([LeafNode(Split(deepcopy(self.data)))]) for _ in range(self.n_trees_g)]
         for tree in trees:
             tree.update_y(tree.update_y(self.data.y.values / self.n_trees_g))
@@ -189,7 +188,6 @@ class ModelCGM:
     
     def initialize_trees_h(self) -> List[Tree]:
         print("enter bartpy/bartpy/model.py ModelCGM initialize_trees_h")
-        
         trees = [Tree([LeafNode(Split(deepcopy(self.data)))]) for _ in range(self.n_trees_h)]
         for tree in trees:
             tree.update_y(tree.update_y(self.data.y.values / self.n_trees_h))
@@ -216,7 +214,8 @@ class ModelCGM:
         print("-exit bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
         return output
 
-    def predict(self, X: np.ndarray=None) -> np.ndarray:
+    def predict(self, X: np.ndarray=None) -> np.ndarray:################################this needs to account for the mixture with
+        ################################ h(x) / p or 1-p subtracted out 
         print("enter bartpy/bartpy/model.py ModelCGM predict_g")
         print("type(self.trees_g)=",type(self.trees_g))
         if X is not None:
@@ -283,24 +282,50 @@ class ModelCGM:
 
     def refreshed_trees_g(self) -> Generator[Tree, None, None]: # the internals of the this function will need to be thouroughly checked
         print("enter bartpy/bartpy/model.py ModelCGM refreshed_trees_g")
-        
+        print("Y values before refresh_trees_g:", self.data.y.values)
+        print("before refresh_trees_g self.predict_h()=", self.predict_h())
+        current_h_of_X = self.predict_h()
+        self.previous_predict_g = self.predict_g()
         if self._prediction_g is None:
             self._prediction_g = self.predict_g()
         for tree in self._trees_g:
             self._prediction_g -= tree.predict_g()
-            tree.update_y(self.data.y.values - self._prediction_g)
+            W = self.data.W.values
+            p = self.data.p.values
+            if not hasattr(self, 'previous_predict_h'):
+                self.previous_predict_h = current_h_of_X
+            prev_h_adjust = self.previous_predict_h * (W*(1-p)-(1-W)*p)
+            current_h_adjust = current_h_of_X * (W*(1-p)-(1-W)*p)
+            y_vals = self.data.y.values + prev_h_adjust - current_h_adjust
+            tree.update_y(y_vals - self._prediction_g)
+            #tree.update_y(self.data.y.values - self._prediction_g) This was the old line that was replaced by the  4 above
+            
             yield tree
             self._prediction_g += tree.predict_g()
+        
+        print("Y values after refresh_trees_g:", self.data.y.values)
+        print("before refresh_trees_g self.predict_h()=", self.predict_h())
+        #self.data.update_y_tilde_h(self._prediction_g)
+        #self.data.update_y_tilde_h_g_function(g_of_X=self.predict_g())
         print("-exit bartpy/bartpy/model.py ModelCGM refreshed_trees_g")
         
     def refreshed_trees_h(self) -> Generator[Tree, None, None]: # the internals of the this function will need to be thouroughly checked
         print("enter bartpy/bartpy/model.py ModelCGM refreshed_trees_h")
-        
+        current_g_of_X = self.predict_g()
+        self.previous_predict_h = self.predict_h()
         if self._prediction_h is None:
             self._prediction_h = self.predict_h()
         for tree in self._trees_h:
             self._prediction_h -= tree.predict_h()
-            tree.update_y(self.data.y.values - self._prediction_h)
+            W = self.data.W.values
+            p = self.data.p.values
+            if not hasattr(self, 'previous_predict_g'):
+                self.previous_predict_g = current_g_of_X
+            denom = 1/(W*(1-p) - (1-W)*p)
+            prev_g_adjust = self.previous_predict_g/denom
+            current_g_adjust = current_g_of_X/denom
+            y_vals = self.data.y.values/denom + prev_g_adjust - current_g_adjust
+            tree.update_y(y_vals - self._prediction_h)
             yield tree
             self._prediction_h += tree.predict_h()
         print("-exit bartpy/bartpy/model.py ModelCGM refreshed_trees_h")

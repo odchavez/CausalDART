@@ -21,7 +21,11 @@ class SplitCondition(object):
                  operator: Callable[[float, float], bool], 
                  condition=None,
                  carry_y_sum=None,
-                 carry_n_obsv=None):
+                 carry_n_obsv=None,
+                 carry_W_sum=None,
+                 carry_p_sum=None,
+                 carry_y_tilde_g_sum=None,
+                 carry_y_tilde_h_sum=None,):
         print("enter bartpy/bartpy/splitcondition.py SplitCondition __init__")
         self.splitting_variable = splitting_variable
         self.splitting_value = splitting_value
@@ -29,6 +33,10 @@ class SplitCondition(object):
         self.operator = operator
 
         self.carry_y_sum = carry_y_sum
+        self.carry_y_tilde_g_sum = carry_y_tilde_g_sum
+        self.carry_y_tilde_h_sum = carry_y_tilde_h_sum
+        self.carry_W_sum = carry_W_sum
+        self.carry_p_sum = carry_p_sum
         self.carry_n_obsv = carry_n_obsv
         print("-exit bartpy/bartpy/splitcondition.py SplitCondition __init__")
 
