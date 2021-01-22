@@ -54,27 +54,39 @@ class LeafNodeSampler(Sampler):
         return output
 
     def sample_cgm_g(self, model: ModelCGM, node: LeafNode) -> float:
-        print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_g")
-        print("######################################################################### node.data.X.n_obsv:", node.data.X.n_obsv)
-        print("######################################################################### node.data.X.n_obsv:", node.data.X.values.shape)
-        prior_var = model.sigma_g_m ** 2
-        n = node.data.X.n_obsv
-        likihood_var = (model.sigma_g.current_value() ** 2) / n
-        likihood_mean = node.data.y.summed_y() / n
-        posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
-        posterior_mean = likihood_mean * (prior_var / (likihood_var + prior_var))
+        prior_var = model.sigma_m ** 2
+        W = node.data.W.values # needs to apply mask
+        p = node.data.p.values # needs to apply mask
+        sigma_g_i = (W/p + (1-W)/(1-p))*model.sigma.current_value()
+        
+        one_over_sigma_g_i_sqrd = 1./(sigma_g_i**2)
+        posterior_variance = 1./( (1./prior_var) + np.sum(((~node.data.mask).astype(int))*(one_over_sigma_g_i_sqrd)))
+        
+        post_mean_numerator = np.sum((~node.data.mask).astype(int)*(node.data.y.values*one_over_sigma_g_i_sqrd))
+        posterior_mean = post_mean_numerator * posterior_variance
+
         output = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees_g, 0.5))
         print("-exit bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_g")
         return output
 
     def sample_cgm_h(self, model: ModelCGM, node: LeafNode) -> float:
         print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_h")
-        prior_var = model.sigma_h_m ** 2
-        n = node.data.X.n_obsv
-        likihood_var = (model.sigma_h.current_value() ** 2) / n
-        likihood_mean = node.data.y.summed_y() / n
-        posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
-        posterior_mean = likihood_mean * (prior_var / (likihood_var + prior_var))
+        prior_var = model.sigma_m ** 2
+        W = node.data.W.values # needs to apply mask
+        p = node.data.p.values # needs to apply mask
+        sigma_h_i = (1./(p*(1-p)))*model.sigma.current_value()
+        
+        one_over_sigma_h_i_sqrd = 1./(sigma_h_i**2)
+        posterior_variance = 1./( (1/prior_var) + np.sum(((~node.data.mask).astype(int))*(one_over_sigma_h_i_sqrd)))
+        
+        post_mean_numerator = np.sum((~node.data.mask).astype(int)*(node.data.y.values*one_over_sigma_h_i_sqrd))
+        posterior_mean = post_mean_numerator*posterior_variance
+        #n = node.data.X.n_obsv
+        
+        #likihood_var = (model.sigma_h.current_value() ** 2) / n
+        #likihood_mean = node.data.y.summed_y() / n
+        #posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
+        #posterior_mean = likihood_mean * (prior_var / (likihood_var + prior_var))
         output = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees_h, 0.5))
         print("-exit bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_h")
         return output

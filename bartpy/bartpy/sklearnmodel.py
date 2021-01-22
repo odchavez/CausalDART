@@ -295,11 +295,11 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             raise ValueError("Empty covariate matrix passed")
         self.data = self._convert_covariates_to_data_cgm(X, y, W, p)
         #self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
-        self.sigma_g = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
-        self.sigma_h = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+        self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+        #self.sigma_h = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
         self.model = ModelCGM(self.data,
-                           self.sigma_g,
-                           self.sigma_h,
+                           self.sigma,
+                           #self.sigma_h,
                            n_trees_g=self.n_trees,
                            n_trees_h=self.n_trees,
                            alpha=self.alpha,

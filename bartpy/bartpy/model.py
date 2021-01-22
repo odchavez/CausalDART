@@ -125,8 +125,8 @@ class ModelCGM:
 
     def __init__(self,
                  data: Optional[Data],
-                 sigma_g: Sigma,
-                 sigma_h: Sigma,
+                 sigma: Sigma,
+                 #sigma_h: Sigma,
                  #trees: Optional[List[Tree]]=None,
                  trees_g: Optional[List[Tree]]=None,
                  trees_h: Optional[List[Tree]]=None,
@@ -142,8 +142,8 @@ class ModelCGM:
         self.alpha = float(alpha)
         self.beta = float(beta)
         self.k = k
-        self._sigma_g = sigma_g
-        self._sigma_h = sigma_h
+        self._sigma = sigma
+        #self._sigma_h = sigma_h
         self._prediction_g = None
         self._prediction_h = None
         self._initializer = initializer
@@ -194,19 +194,23 @@ class ModelCGM:
         print("-exit bartpy/bartpy/model.py ModelCGM initialize_trees_h")
         return trees
 
-    def residuals_g(self) -> np.ndarray:
-        print("enter bartpy/bartpy/model.py ModelCGM residuals_g")
-        print("self.predict_g()=",self.predict_g())
-        output = self.data.y.values - self.predict_g()
-        print("-exit bartpy/bartpy/model.py ModelCGM residuals_g")
-        return output
-
-    def residuals_h(self) -> np.ndarray:
+    def residuals(self) -> np.ndarray:
         print("enter bartpy/bartpy/model.py ModelCGM residuals")
-        print("self.predict_h()=",self.predict_h())
-        output = self.data.y.values - self.predict_h()
+        #print("self.predict_g()=",self.predict_g())
+        W=self.data.W.values
+        p=self.data.p.values
+        paw = W*p**2 + (1-W)*(1-p)**2
+        pbw = W*(1-p) - p*(1-W)
+        output = np.power(paw,.5)*(self.data.y.values - self.predict_g() - pbw*self.predict_h())
         print("-exit bartpy/bartpy/model.py ModelCGM residuals")
         return output
+
+    #def residuals_h(self) -> np.ndarray:
+    #    print("enter bartpy/bartpy/model.py ModelCGM residuals")
+    #    print("self.predict_h()=",self.predict_h())
+    #    output = self.data.y.values - self.predict_h()
+    #    print("-exit bartpy/bartpy/model.py ModelCGM residuals")
+    #    return output
 
     def unnormalized_residuals(self) -> np.ndarray:
         print("enter bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
@@ -319,42 +323,46 @@ class ModelCGM:
             self._prediction_h -= tree.predict_h()
             W = self.data.W.values
             p = self.data.p.values
-            if not hasattr(self, 'previous_predict_g'):
-                self.previous_predict_g = current_g_of_X
-            denom = 1/(W*(1-p) - (1-W)*p)
-            prev_g_adjust = self.previous_predict_g/denom
-            current_g_adjust = current_g_of_X/denom
-            y_vals = self.data.y.values/denom + prev_g_adjust - current_g_adjust
+            #if not hasattr(self, 'previous_predict_g'):
+            #    self.previous_predict_g = current_g_of_X
+            
+            factor = (W/(1-p)) - ((1-W)/p)
+            prev_g_adjust = self.previous_predict_g*factor
+            current_g_adjust = current_g_of_X*factor
+            
+            #print("model data self.data.y.values:", self.data.y.values)
+            y_vals = self.data.y.values*factor + prev_g_adjust - current_g_adjust
+            #print("model data y-h_i+h_i+1:", y_vals)
             tree.update_y(y_vals - self._prediction_h)
             yield tree
             self._prediction_h += tree.predict_h()
         print("-exit bartpy/bartpy/model.py ModelCGM refreshed_trees_h")
 
-    @property
-    def sigma_g_m(self) -> float:
-        print("enter bartpy/bartpy/model.py ModelCGM sigma_g_m")
-        output = 0.5 / (self.k * np.power(self.n_trees_g, 0.5))
-        print("-exit bartpy/bartpy/model.py ModelCGM sigma_g_m")
-        return output
+    #@property
+    #def sigma_g_m(self) -> float:
+    #    print("enter bartpy/bartpy/model.py ModelCGM sigma_g_m")
+    #    output = 0.5 / (self.k * np.power(self.n_trees_g, 0.5))
+    #    print("-exit bartpy/bartpy/model.py ModelCGM sigma_g_m")
+    #    return output
 
     @property
-    def sigma_h_m(self) -> float:
+    def sigma_m(self) -> float:
         print("enter bartpy/bartpy/model.py ModelCGM sigma_h_m")
         output = 0.5 / (self.k * np.power(self.n_trees_h, 0.5))
         print("-exit bartpy/bartpy/model.py ModelCGM sigma_h_m")
         return output
     
-    @property
-    def sigma_g(self) -> Sigma:
-        print("enter bartpy/bartpy/model.py ModelCGM sigma_g")
-        print("-exit bartpy/bartpy/model.py ModelCGM sigma_g")
-        return self._sigma_g
+    #@property
+    #def sigma_g(self) -> Sigma:
+    #    print("enter bartpy/bartpy/model.py ModelCGM sigma_g")
+    #    print("-exit bartpy/bartpy/model.py ModelCGM sigma_g")
+    #    return self._sigma_g
     
     @property
-    def sigma_h(self) -> Sigma:
+    def sigma(self) -> Sigma:
         print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
         print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
-        return self._sigma_h
+        return self._sigma
 
 
 def deep_copy_model(model: Model) -> Model:
@@ -368,8 +376,8 @@ def deep_copy_model_cgm(model: ModelCGM) -> ModelCGM:
     print("enter bartpy/bartpy/model.py deep_copy_model_cgm")
     copied_model = ModelCGM(
         None, 
-        deepcopy(model.sigma_g), 
-        deepcopy(model.sigma_h), 
+        deepcopy(model.sigma), 
+        #deepcopy(model.sigma_h), 
         [deep_copy_tree(tree) for tree in model.trees_g],
         [deep_copy_tree(tree) for tree in model.trees_h],
     )

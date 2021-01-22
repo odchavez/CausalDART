@@ -34,51 +34,89 @@ def log_grow_ratio(combined_node: LeafNode, left_node: LeafNode, right_node: Lea
     print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py log_grow_ratio")
     return output
 
-def log_grow_ratio_cgm_g(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma_g: Sigma, sigma_mu: float):
+
+def log_grow_ratio_cgm_g(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float):
     print("enter bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py log_grow_ratio_cgm_g")
-    var = np.power(sigma_g.current_value(), 2)
+    var = np.power(sigma.current_value(), 2)
     var_mu = np.power(sigma_mu, 2)
-    n = combined_node.data.X.n_obsv
-    n_l = left_node.data.X.n_obsv
-    n_r = right_node.data.X.n_obsv
+    #n = combined_node.data.X.n_obsv
+    #n_l = left_node.data.X.n_obsv
+    #n_r = right_node.data.X.n_obsv
 
-    first_term = (var * (var + n * sigma_mu)) / ((var + n_l * var_mu) * (var + n_r * var_mu))
-    first_term = np.log(np.sqrt(first_term))
+    #first_term = (var * (var + n * sigma_mu)) / ((var + n_l * var_mu) * (var + n_r * var_mu))
+    #first_term = np.log(np.sqrt(first_term))
+    W=combined_node.data.W.values
+    p=combined_node.data.W.values
+    
+    
+    sigma_g_i_sqr = var*(W/(p**2) + (1-W)/((1-p)**2))
+    sum_sigma_g_i_sqr_left = np.sum( (~left_node.data.mask).astype(int) * 1./sigma_g_i_sqr)
+    sum_sigma_g_i_sqr_right = np.sum( (~right_node.data.mask).astype(int) * 1./sigma_g_i_sqr)
+    sum_sigma_g_i_sqr_combined = np.sum( (~combined_node.data.mask).astype(int) * 1./sigma_g_i_sqr)
+    
+    A_left = np.power(1/var_mu + sum_sigma_g_i_sqr_left,0.5)
+    A_right = np.power(1/var_mu + sum_sigma_g_i_sqr_right,0.5)
+    A_combined = np.power(1/var_mu + sum_sigma_g_i_sqr_combined,0.5)
+    first_term = np.log((A_left*A_right)/(A_combined * sigma_mu))
+    
+    y_tilde_g_i = combined_node.data.y.values
+    y_tilde_g_i_over_var_i = y_tilde_g_i/sigma_g_i_sqr
+    
+    left_sum = np.sum((~left_node.data.mask).astype(int) * y_tilde_g_i_over_var_i)
+    right_sum = np.sum((~right_node.data.mask).astype(int) * y_tilde_g_i_over_var_i)
+    combined_sum = np.sum((~combined_node.data.mask).astype(int) * y_tilde_g_i_over_var_i)
+    
+    left_resp_contribution = 0.5*left_sum**2
+    right_resp_contribution = 0.5*right_sum**2
+    combined_resp_contribution = 0.5*combined_sum**2
+    
+    #combined_y_sum = combined_node.data.y.summed_y()
+    #left_y_sum = left_node.data.y.summed_y()
+    #right_y_sum = right_node.data.y.summed_y()
 
-    combined_y_sum = combined_node.data.y.summed_y()
-    left_y_sum = left_node.data.y.summed_y()
-    right_y_sum = right_node.data.y.summed_y()
-
-    left_resp_contribution = np.square(left_y_sum) / (var + n_l * sigma_mu)
-    right_resp_contribution = np.square(right_y_sum) / (var + n_r * sigma_mu)
-    combined_resp_contribution = np.square(combined_y_sum) / (var + n * sigma_mu)
+    #left_resp_contribution = np.square(left_y_sum) / (var + n_l * sigma_mu)
+    #right_resp_contribution = np.square(right_y_sum) / (var + n_r * sigma_mu)
+    #combined_resp_contribution = np.square(combined_y_sum) / (var + n * sigma_mu)
 
     resp_contribution = left_resp_contribution + right_resp_contribution - combined_resp_contribution
-    output = first_term + ((var_mu / (2 * var)) * resp_contribution)
+    #output = first_term + ((var_mu / (2 * var)) * resp_contribution)
+    output = first_term + resp_contribution
     print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py log_grow_ratio_cgm_g")
     return output
 
-def log_grow_ratio_cgm_h(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma_h: Sigma, sigma_mu: float):
+def log_grow_ratio_cgm_h(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float):
     print("enter bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py log_grow_ratio_cgm_h")
-    var = np.power(sigma_h.current_value(), 2)
+    var = np.power(sigma.current_value(), 2)
     var_mu = np.power(sigma_mu, 2)
-    n = combined_node.data.X.n_obsv
-    n_l = left_node.data.X.n_obsv
-    n_r = right_node.data.X.n_obsv
 
-    first_term = (var * (var + n * sigma_mu)) / ((var + n_l * var_mu) * (var + n_r * var_mu))
-    first_term = np.log(np.sqrt(first_term))
-
-    combined_y_sum = combined_node.data.y.summed_y()
-    left_y_sum = left_node.data.y.summed_y()
-    right_y_sum = right_node.data.y.summed_y()
-
-    left_resp_contribution = np.square(left_y_sum) / (var + n_l * sigma_mu)
-    right_resp_contribution = np.square(right_y_sum) / (var + n_r * sigma_mu)
-    combined_resp_contribution = np.square(combined_y_sum) / (var + n * sigma_mu)
+    W=combined_node.data.W.values
+    p=combined_node.data.W.values
+    
+    
+    sigma_h_i_sqr = var/((p**2)*(1-p)**2)
+    sum_sigma_h_i_sqr_left = np.sum( (~left_node.data.mask).astype(int) * 1./sigma_h_i_sqr)
+    sum_sigma_h_i_sqr_right = np.sum( (~right_node.data.mask).astype(int) * 1./sigma_h_i_sqr)
+    sum_sigma_h_i_sqr_combined = np.sum( (~combined_node.data.mask).astype(int) * 1./sigma_h_i_sqr)
+    
+    A_left = np.power(1/var_mu + sum_sigma_h_i_sqr_left,0.5)
+    A_right = np.power(1/var_mu + sum_sigma_h_i_sqr_right,0.5)
+    A_combined = np.power(1/var_mu + sum_sigma_h_i_sqr_combined,0.5)
+    first_term = np.log((A_left*A_right)/(A_combined * sigma_mu))
+    
+    y_tilde_h_i = combined_node.data.y.values
+    y_tilde_h_i_over_var_i = y_tilde_h_i/sigma_h_i_sqr
+    
+    left_sum = np.sum((~left_node.data.mask).astype(int) * y_tilde_h_i_over_var_i)
+    right_sum = np.sum((~right_node.data.mask).astype(int) * y_tilde_h_i_over_var_i)
+    combined_sum = np.sum((~combined_node.data.mask).astype(int) * y_tilde_h_i_over_var_i)
+    
+    left_resp_contribution = 0.5*left_sum**2
+    right_resp_contribution = 0.5*right_sum**2
+    combined_resp_contribution = 0.5*combined_sum**2
 
     resp_contribution = left_resp_contribution + right_resp_contribution - combined_resp_contribution
-    output = first_term + ((var_mu / (2 * var)) * resp_contribution)
+
+    output = first_term + resp_contribution
     print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py log_grow_ratio_cgm_h")
     return output
 
@@ -227,7 +265,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.existing_node, 
             proposal.updated_node.left_child, 
             proposal.updated_node.right_child, 
-            model.sigma_g, model.sigma_g_m)
+            model.sigma, model.sigma_m)
         print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
               "UniformTreeMutationLikihoodRatio log_likihood_ratio_grow_cgm_g")
         return output
@@ -240,7 +278,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.existing_node, 
             proposal.updated_node.left_child, 
             proposal.updated_node.right_child, 
-            model.sigma_h, model.sigma_h_m)
+            model.sigma, model.sigma_m)
         print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
               "UniformTreeMutationLikihoodRatio log_likihood_ratio_grow_cgm_h")
         return output
@@ -266,7 +304,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.updated_node, 
             proposal.existing_node.left_child, 
             proposal.existing_node.right_child, 
-            model.sigma_g, model.sigma_g_m)
+            model.sigma, model.sigma_m)
         print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
               "UniformTreeMutationLikihoodRatio log_likihood_ratio_prune_g")
         return output
@@ -279,7 +317,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.updated_node, 
             proposal.existing_node.left_child, 
             proposal.existing_node.right_child, 
-            model.sigma_h, model.sigma_h_m)
+            model.sigma, model.sigma_m)
         print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
               "UniformTreeMutationLikihoodRatio log_likihood_ratio_prune_h")
         return output
