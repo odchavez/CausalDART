@@ -54,9 +54,19 @@ class UnconstrainedTreeMutationSampler(Sampler):
         ratio = self.likihood_ratio.log_probability_ratio_cgm_g(model, tree, proposal)
         
         if self._scalar_sampler.sample() < ratio:
+            print("###############################")
+            print("#")
+            print("# G TREE PROPOSAL ACCEPTED")
+            print("#")
+            print("###############################")
             print("-exit /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler sample_cgm_g")
             return proposal
         else:
+            print("###############################")
+            print("#")
+            print("# G TREE PROPOSAL REJECTED")
+            print("#")
+            print("###############################")
             print("-exit /bartpy/bartpy/samplers/unconstrainedtree/treemutation.py UnconstrainedTreeMutationSampler sample_cgm_g")
             return None
     

@@ -41,10 +41,12 @@ class Split:
         
         if X is None:
             output = ~self._data.mask
+            print("output=",np.unique(output))
             print("-exit bartpy/bartpy/split.py Split condition")
             return output
         else:
             output = self.out_of_sample_condition(X)
+            print("output",np.unique(output))
             print("-exit bartpy/bartpy/split.py Split condition")
             return output
 

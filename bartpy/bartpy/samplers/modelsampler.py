@@ -114,6 +114,7 @@ class ModelSamplerCGM(Sampler):
         for _ in tqdm(range(n_burn)):
             self.step(model, trace_logger)
         trace = []
+        trace_h = []
         model_trace = []
         acceptance_trace = []
         print("Starting sampling")
@@ -125,9 +126,11 @@ class ModelSamplerCGM(Sampler):
             step_trace_dict = self.step(model, trace_logger)
             if ss % thin_inverse == 0:
                 if store_in_sample_predictions:
-                    in_sample_log = trace_logger["In Sample Prediction"](model.predict())
+                    in_sample_log   = trace_logger["In Sample Prediction"](model.predict())
+                    in_sample_log_h = trace_logger["In Sample Prediction"](model.predict_h())
                     if in_sample_log is not None:
                         trace.append(in_sample_log)
+                        trace_h.append(in_sample_log_h)
                 if store_acceptance:
                     acceptance_trace.append(step_trace_dict)
                 model_log = trace_logger["Model"](model)
@@ -138,5 +141,6 @@ class ModelSamplerCGM(Sampler):
         return {
             "model": model_trace,
             "acceptance": acceptance_trace,
-            "in_sample_predictions": trace
+            "in_sample_predictions_g": trace,
+            "in_sample_predictions_h": trace_h,
         }

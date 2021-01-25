@@ -126,10 +126,12 @@ class ModelCGM:
     def __init__(self,
                  data: Optional[Data],
                  sigma: Sigma,
-                 #sigma_h: Sigma,
+                 sigma_h: Sigma,
+                 sigma_g: Sigma,
                  #trees: Optional[List[Tree]]=None,
                  trees_g: Optional[List[Tree]]=None,
                  trees_h: Optional[List[Tree]]=None,
+                 n_trees: int=50,
                  n_trees_g: int=50,
                  n_trees_h: int=50,
                  alpha: float=0.95,
@@ -143,14 +145,16 @@ class ModelCGM:
         self.beta = float(beta)
         self.k = k
         self._sigma = sigma
-        #self._sigma_h = sigma_h
+        self._sigma_h = sigma_h
+        self._sigma_g = sigma_g
         self._prediction_g = None
         self._prediction_h = None
         self._initializer = initializer
-
+        self.n_trees = n_trees
+        
         if trees_g is None:
             print("in if trees_g is None")
-            self.n_trees_g = n_trees_g
+            self.n_trees_g = n_trees#n_trees_g
             self._trees_g = self.initialize_trees_g()
             if self._initializer is not None:
                 print("in self._initializer is not None")
@@ -162,7 +166,7 @@ class ModelCGM:
 
         if trees_h is None:
             print("in if trees_h is None")
-            self.n_trees_h = n_trees_h
+            self.n_trees_h = n_trees#n_trees_h
             self._trees_h = self.initialize_trees_h()
             if self._initializer is not None:
                 print("in self._initializer is not None")
@@ -194,23 +198,33 @@ class ModelCGM:
         print("-exit bartpy/bartpy/model.py ModelCGM initialize_trees_h")
         return trees
 
-    def residuals(self) -> np.ndarray:
+    def residuals________(self) -> np.ndarray:
         print("enter bartpy/bartpy/model.py ModelCGM residuals")
         #print("self.predict_g()=",self.predict_g())
         W=self.data.W.values
         p=self.data.p.values
         paw = W*p**2 + (1-W)*(1-p)**2
         pbw = W*(1-p) - p*(1-W)
-        output = np.power(paw,.5)*(self.data.y.values - self.predict_g() - pbw*self.predict_h())
+        print("Computing Residuals with self.data.y.values=", self.data.y.values)
+        print("mean self.data.y.values=", np.mean(self.data.y.values))
+        print("var self.data.y.values=", np.var(self.data.y.values))
+        output = self.data.y.values - np.power(paw,.5)*(self.data.y.values - self.predict_g() - pbw*self.predict_h())
         print("-exit bartpy/bartpy/model.py ModelCGM residuals")
         return output
 
-    #def residuals_h(self) -> np.ndarray:
-    #    print("enter bartpy/bartpy/model.py ModelCGM residuals")
-    #    print("self.predict_h()=",self.predict_h())
-    #    output = self.data.y.values - self.predict_h()
-    #    print("-exit bartpy/bartpy/model.py ModelCGM residuals")
-    #    return output
+    def residuals_g(self) -> np.ndarray:
+        print("enter bartpy/bartpy/model.py ModelCGM residuals_g")
+        #print("self.predict_g()=",self.predict_g())
+        output = self.data.y.values - self.predict_g()
+        print("-exit bartpy/bartpy/model.py ModelCGM residuals_g")
+        return output
+    
+    def residuals_h(self) -> np.ndarray:
+        print("enter bartpy/bartpy/model.py ModelCGM residuals_h")
+        #print("self.predict_h()=",self.predict_h())
+        output = self.data.y.values - self.predict_h()
+        print("-exit bartpy/bartpy/model.py ModelCGM residuals_h")
+        return output
 
     def unnormalized_residuals(self) -> np.ndarray:
         print("enter bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
@@ -286,56 +300,39 @@ class ModelCGM:
 
     def refreshed_trees_g(self) -> Generator[Tree, None, None]: # the internals of the this function will need to be thouroughly checked
         print("enter bartpy/bartpy/model.py ModelCGM refreshed_trees_g")
-        print("Y values before refresh_trees_g:", self.data.y.values)
-        print("before refresh_trees_g self.predict_h()=", self.predict_h())
         current_h_of_X = self.predict_h()
-        self.previous_predict_g = self.predict_g()
         if self._prediction_g is None:
             self._prediction_g = self.predict_g()
         for tree in self._trees_g:
             self._prediction_g -= tree.predict_g()
             W = self.data.W.values
             p = self.data.p.values
-            if not hasattr(self, 'previous_predict_h'):
-                self.previous_predict_h = current_h_of_X
-            prev_h_adjust = self.previous_predict_h * (W*(1-p)-(1-W)*p)
             current_h_adjust = current_h_of_X * (W*(1-p)-(1-W)*p)
-            y_vals = self.data.y.values + prev_h_adjust - current_h_adjust
+            y_vals = self.data.y.values
             tree.update_y(y_vals - self._prediction_g)
-            #tree.update_y(self.data.y.values - self._prediction_g) This was the old line that was replaced by the  4 above
-            
             yield tree
             self._prediction_g += tree.predict_g()
-        
-        print("Y values after refresh_trees_g:", self.data.y.values)
-        print("before refresh_trees_g self.predict_h()=", self.predict_h())
-        #self.data.update_y_tilde_h(self._prediction_g)
-        #self.data.update_y_tilde_h_g_function(g_of_X=self.predict_g())
         print("-exit bartpy/bartpy/model.py ModelCGM refreshed_trees_g")
         
     def refreshed_trees_h(self) -> Generator[Tree, None, None]: # the internals of the this function will need to be thouroughly checked
         print("enter bartpy/bartpy/model.py ModelCGM refreshed_trees_h")
         current_g_of_X = self.predict_g()
-        self.previous_predict_h = self.predict_h()
+        #self.previous_predict_h = self.predict_h()
         if self._prediction_h is None:
             self._prediction_h = self.predict_h()
         for tree in self._trees_h:
             self._prediction_h -= tree.predict_h()
             W = self.data.W.values
             p = self.data.p.values
-            #if not hasattr(self, 'previous_predict_g'):
-            #    self.previous_predict_g = current_g_of_X
-            
             factor = (W/(1-p)) - ((1-W)/p)
-            prev_g_adjust = self.previous_predict_g*factor
             current_g_adjust = current_g_of_X*factor
-            
-            #print("model data self.data.y.values:", self.data.y.values)
-            y_vals = self.data.y.values*factor + prev_g_adjust - current_g_adjust
-            #print("model data y-h_i+h_i+1:", y_vals)
+            #y_vals = self.data.y.values*factor - current_g_adjust
+            y_vals = self.data.y.values
             tree.update_y(y_vals - self._prediction_h)
             yield tree
             self._prediction_h += tree.predict_h()
+            
+        print("Unique self.predict_h() values=", np.unique(self.predict_h()))
         print("-exit bartpy/bartpy/model.py ModelCGM refreshed_trees_h")
 
     #@property
@@ -347,21 +344,27 @@ class ModelCGM:
 
     @property
     def sigma_m(self) -> float:
-        print("enter bartpy/bartpy/model.py ModelCGM sigma_h_m")
+        print("enter bartpy/bartpy/model.py ModelCGM sigma_m")
         output = 0.5 / (self.k * np.power(self.n_trees_h, 0.5))
-        print("-exit bartpy/bartpy/model.py ModelCGM sigma_h_m")
+        print("-exit bartpy/bartpy/model.py ModelCGM sigma_m")
         return output
     
-    #@property
-    #def sigma_g(self) -> Sigma:
-    #    print("enter bartpy/bartpy/model.py ModelCGM sigma_g")
-    #    print("-exit bartpy/bartpy/model.py ModelCGM sigma_g")
-    #    return self._sigma_g
+    @property
+    def sigma_g(self) -> Sigma:
+        print("enter bartpy/bartpy/model.py ModelCGM sigma_g")
+        print("-exit bartpy/bartpy/model.py ModelCGM sigma_g")
+        return self._sigma_g
+ 
+    @property
+    def sigma_h(self) -> Sigma:
+        print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
+        print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
+        return self._sigma_h
     
     @property
     def sigma(self) -> Sigma:
-        print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
-        print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
+        print("enter bartpy/bartpy/model.py ModelCGM sigma")
+        print("-exit bartpy/bartpy/model.py ModelCGM sigma")
         return self._sigma
 
 
@@ -377,7 +380,8 @@ def deep_copy_model_cgm(model: ModelCGM) -> ModelCGM:
     copied_model = ModelCGM(
         None, 
         deepcopy(model.sigma), 
-        #deepcopy(model.sigma_h), 
+        deepcopy(model.sigma_h), 
+        deepcopy(model.sigma_g), 
         [deep_copy_tree(tree) for tree in model.trees_g],
         [deep_copy_tree(tree) for tree in model.trees_h],
     )

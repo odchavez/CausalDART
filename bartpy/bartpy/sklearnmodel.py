@@ -233,11 +233,15 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             self with trained parameter values
         """
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel fit_CGM")
-        y_i_star = y*(W-p)/(p*(1-p))
+        y_i_star = y#*(W-p)/(p*(1-p))
         self.model = self._construct_model_cgm(X, y_i_star, W, p) #this will need to be self._construct_model_cgm(X,y,p)
         self.extract = Parallel(n_jobs=self.n_jobs)(self.f_delayed_chains_cgm(X, y_i_star, W, p))
         self.combined_chains = self._combine_chains(self.extract)
-        self._model_samples_cgm, self._prediction_samples = self.combined_chains["model"], self.combined_chains["in_sample_predictions"]
+        self._model_samples_cgm, self._prediction_samples_g, self._prediction_samples_h = (
+            self.combined_chains["model"], 
+            self.combined_chains["in_sample_predictions_g"],
+            self.combined_chains["in_sample_predictions_h"],
+        )
         self._acceptance_trace = self.combined_chains["acceptance"]
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel fit_CGM")
         return self
@@ -296,15 +300,20 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         self.data = self._convert_covariates_to_data_cgm(X, y, W, p)
         #self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
         self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
-        #self.sigma_h = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
-        self.model = ModelCGM(self.data,
-                           self.sigma,
-                           #self.sigma_h,
-                           n_trees_g=self.n_trees,
-                           n_trees_h=self.n_trees,
-                           alpha=self.alpha,
-                           beta=self.beta,
-                           initializer=self.initializer)
+        self.sigma_h = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+        self.sigma_g = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+
+        self.model = ModelCGM(
+            data=self.data,
+            sigma=self.sigma,
+            sigma_h=self.sigma_h,
+            sigma_g=self.sigma_g,
+            n_trees=self.n_trees,
+            #n_trees_g=self.n_trees,
+            #n_trees_h=self.n_trees,
+            alpha=self.alpha,
+            beta=self.beta,
+            initializer=self.initializer)
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _construct_model_cgm")
         return self.model
     
@@ -406,7 +415,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel predict")
         if X is None and self.store_in_sample_predictions:
-            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples, axis=0))
+            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_g, axis=0))
             print("exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
             return output
         elif X is None and not self.store_in_sample_predictions:
@@ -437,7 +446,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel predict")
         if X is None and self.store_in_sample_predictions:
-            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples, axis=0))
+            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_g, axis=0))
             print("exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
             return output
         elif X is None and not self.store_in_sample_predictions:
@@ -468,7 +477,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
         print("enter bartpy/bartpy/sklearnmodel.py SklearnModel predict")
         if X is None and self.store_in_sample_predictions:
-            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples, axis=0))
+            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_h, axis=0))
             print("exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
             return output
         elif X is None and not self.store_in_sample_predictions:
@@ -642,9 +651,23 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         np.ndarray
             prediction samples with dimensionality n_samples * n_points
         """
-        print("enter bartpy/bartpy/sklearnmodel.py SklearnModel prediction_samples")
-        print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel prediction_samples")
+        #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel prediction_samples")
+        #print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel prediction_samples")
         return self.prediction_samples
+    
+    def get_prediction_samples(self) -> np.ndarray:
+        """
+        Matrix of prediction samples at each point in sampling
+        Useful for assessing convergence, calculating point estimates etc.
+
+        Returns
+        -------
+        np.ndarray
+            prediction samples with dimensionality n_samples * n_points
+        """
+        #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel prediction_samples")
+        #print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel prediction_samples")
+        return self._prediction_samples
 
     def from_extract(self, extract: List[Chain], X: np.ndarray, y: np.ndarray) -> 'SklearnModel':
         """
