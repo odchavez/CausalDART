@@ -198,17 +198,17 @@ class ModelCGM:
         print("-exit bartpy/bartpy/model.py ModelCGM initialize_trees_h")
         return trees
 
-    def residuals________(self) -> np.ndarray:
+    def residuals(self) -> np.ndarray:
         print("enter bartpy/bartpy/model.py ModelCGM residuals")
         #print("self.predict_g()=",self.predict_g())
         W=self.data.W.values
         p=self.data.p.values
         paw = W*p**2 + (1-W)*(1-p)**2
         pbw = W*(1-p) - p*(1-W)
-        print("Computing Residuals with self.data.y.values=", self.data.y.values)
-        print("mean self.data.y.values=", np.mean(self.data.y.values))
-        print("var self.data.y.values=", np.var(self.data.y.values))
-        output = self.data.y.values - np.power(paw,.5)*(self.data.y.values - self.predict_g() - pbw*self.predict_h())
+        #print("Computing Residuals with self.data.y.values=", self.data.y.values)
+        #print("mean self.data.y.values=", np.mean(self.data.y.values))
+        #print("var self.data.y.values=", np.var(self.data.y.values))
+        output = self.data.y.values - self.predict_g() - pbw*self.predict_h()
         print("-exit bartpy/bartpy/model.py ModelCGM residuals")
         return output
 
@@ -307,8 +307,8 @@ class ModelCGM:
             self._prediction_g -= tree.predict_g()
             W = self.data.W.values
             p = self.data.p.values
-            current_h_adjust = current_h_of_X * (W*(1-p)-(1-W)*p)
-            y_vals = self.data.y.values
+            #y_vals = self.data.y.values 
+            y_vals = self.data.y.values - (W*(1-p)-(1-W)*p)*current_h_of_X
             tree.update_y(y_vals - self._prediction_g)
             yield tree
             self._prediction_g += tree.predict_g()
@@ -325,9 +325,9 @@ class ModelCGM:
             W = self.data.W.values
             p = self.data.p.values
             factor = (W/(1-p)) - ((1-W)/p)
-            current_g_adjust = current_g_of_X*factor
-            #y_vals = self.data.y.values*factor - current_g_adjust
-            y_vals = self.data.y.values
+            current_g_adjust = current_g_of_X
+            #y_vals = self.data.y.values
+            y_vals = (self.data.y.values - current_g_adjust)*factor
             tree.update_y(y_vals - self._prediction_h)
             yield tree
             self._prediction_h += tree.predict_h()

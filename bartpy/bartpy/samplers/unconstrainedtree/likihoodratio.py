@@ -307,8 +307,8 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.existing_node, 
             proposal.updated_node.left_child, 
             proposal.updated_node.right_child,
-            #model.sigma, model.sigma_m)
-            model.sigma_g, model.sigma_m)
+            model.sigma, model.sigma_m)
+            #model.sigma_g, model.sigma_m)
         print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
               "UniformTreeMutationLikihoodRatio log_likihood_ratio_grow_cgm_g")
         return output
@@ -321,8 +321,8 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.existing_node, 
             proposal.updated_node.left_child, 
             proposal.updated_node.right_child, 
-            #model.sigma, model.sigma_m)
-            model.sigma_h, model.sigma_m)
+            model.sigma, model.sigma_m)
+            #model.sigma_h, model.sigma_m)
         print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
               "UniformTreeMutationLikihoodRatio log_likihood_ratio_grow_cgm_h")
         return output
@@ -348,8 +348,8 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.updated_node, 
             proposal.existing_node.left_child, 
             proposal.existing_node.right_child, 
-            #model.sigma, model.sigma_m)
-            model.sigma_g, model.sigma_m)
+            model.sigma, model.sigma_m)
+            #model.sigma_g, model.sigma_m)
         print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
               "UniformTreeMutationLikihoodRatio log_likihood_ratio_prune_g")
         return output
@@ -362,8 +362,8 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.updated_node, 
             proposal.existing_node.left_child, 
             proposal.existing_node.right_child, 
-            #model.sigma, model.sigma_m)
-            model.sigma_h, model.sigma_m)
+            model.sigma, model.sigma_m)
+            #model.sigma_h, model.sigma_m)
         print("-exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py",
               "UniformTreeMutationLikihoodRatio log_likihood_ratio_prune_h")
         return output

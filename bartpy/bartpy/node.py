@@ -156,18 +156,7 @@ def split_node(node: LeafNode, split_conditions: Tuple[SplitCondition, SplitCond
     left_split = node.split + split_conditions[0]
     split_conditions[1].carry_n_obsv = node.data.X.n_obsv - left_split.data.X.n_obsv
     split_conditions[1].carry_y_sum = node.data.y.summed_y() - left_split.data.y.summed_y()
-    
-    #if (node.data.W is not None) and (node.data.p is not None):
-    #    #print("node.data.W is not None=", node.data.W is not None)
-    #    split_conditions[1].carry_W_sum = node.data.W.summed_W() - left_split.data.W.summed_W()
-    #    split_conditions[1].carry_p_sum = node.data.p.summed_p() - left_split.data.p.summed_p()
-    #    split_conditions[1].carry_y_tilde_g_sum = (
-    #        node.data.y_tilde_g.summed_y_tilde_g() - left_split.data.y_tilde_g.summed_y_tilde_g()
-    #    )
-    #    #split_conditions[1].carry_y_tilde_h_sum = (
-    #    #    node.data.y_tilde_h.summed_y_tilde_h() - left_split.data.y_tilde_h.summed_y_tilde_h()
-    #    #)
-        
+
     right_split = node.split + split_conditions[1]
     output = DecisionNode(node.split,
                         LeafNode(left_split, depth=node.depth + 1),
