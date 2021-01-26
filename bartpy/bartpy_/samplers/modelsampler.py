@@ -17,13 +17,13 @@ class ModelSampler(Sampler):
     def __init__(self,
                  schedule: SampleSchedule,
                  trace_logger_class: Type[TraceLogger]=TraceLogger):
-        #print("enter bartpy/bartpy/samplers/modelsampler.py ModelSampler __init__")
+        print("enter bartpy/bartpy/samplers/modelsampler.py ModelSampler __init__")
         self.schedule = schedule
         self.trace_logger_class = trace_logger_class
-        #print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSampler __init__")
+        print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSampler __init__")
 
     def step(self, model: Model, trace_logger: TraceLogger):
-        #print("enter bartpy/bartpy/samplers/modelsampler.py ModelSampler step")
+        print("enter bartpy/bartpy/samplers/modelsampler.py ModelSampler step")
         step_result = defaultdict(list)
         for step_kind, step in self.schedule.steps(model):
             result = step()
@@ -31,7 +31,7 @@ class ModelSampler(Sampler):
             if log_message is not None:
                 step_result[step_kind].append(log_message)
         output = {x: np.mean([1 if y else 0 for y in step_result[x]]) for x in step_result}        
-        #print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSampler step")
+        print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSampler step")
         return output
 
     def samples(self, model: Model,
@@ -41,7 +41,7 @@ class ModelSampler(Sampler):
                 store_in_sample_predictions: bool=True,
                 store_acceptance: bool=True) -> Chain:
         print("")
-        #print("enter bartpy/bartpy/samplers/modelsampler.py ModelSampler samples")
+        print("enter bartpy/bartpy/samplers/modelsampler.py ModelSampler samples")
         print("Starting burn")
 
         trace_logger = self.trace_logger_class()
@@ -54,9 +54,9 @@ class ModelSampler(Sampler):
         print("Starting sampling")
 
         thin_inverse = 1. / thin
-        #print("thin_inverse=", thin_inverse)
+        print("thin_inverse=", thin_inverse)
         for ss in tqdm(range(n_samples)):
-            #print("iteration: ",ss)
+            print("iteration: ",ss)
             step_trace_dict = self.step(model, trace_logger)
             if ss % thin_inverse == 0:
                 if store_in_sample_predictions:
@@ -68,8 +68,8 @@ class ModelSampler(Sampler):
                 model_log = trace_logger["Model"](model)
                 if model_log is not None:
                     model_trace.append(model_log)
-        #print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSampler samples")
-        #print("")
+        print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSampler samples")
+        print("")
         return {
             "model": model_trace,
             "acceptance": acceptance_trace,
@@ -82,13 +82,13 @@ class ModelSamplerCGM(Sampler):
     def __init__(self,
                  schedule: SampleScheduleCGM,
                  trace_logger_class: Type[TraceLogger]=TraceLoggerCGM):
-        #print("enter bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM __init__")
+        print("enter bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM __init__")
         self.schedule = schedule
         self.trace_logger_class = trace_logger_class
-        #print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM __init__")
+        print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM __init__")
 
     def step(self, model: ModelCGM, trace_logger: TraceLogger):
-        #print("enter bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM step")
+        print("enter bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM step")
         step_result = defaultdict(list)
         for step_kind, step in self.schedule.steps(model):
             result = step()
@@ -96,7 +96,7 @@ class ModelSamplerCGM(Sampler):
             if log_message is not None:
                 step_result[step_kind].append(log_message)
         output = {x: np.mean([1 if y else 0 for y in step_result[x]]) for x in step_result}        
-        #print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM step")
+        print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM step")
         return output
 
     def samples(self, model: ModelCGM,
@@ -106,7 +106,7 @@ class ModelSamplerCGM(Sampler):
                 store_in_sample_predictions: bool=True,
                 store_acceptance: bool=True) -> Chain:
         print("")
-        #print("enter bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM samples")
+        print("enter bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM samples")
         print("Starting burn")
 
         trace_logger = self.trace_logger_class()
@@ -120,9 +120,9 @@ class ModelSamplerCGM(Sampler):
         print("Starting sampling")
 
         thin_inverse = 1. / thin
-        #print("thin_inverse=", thin_inverse)
+        print("thin_inverse=", thin_inverse)
         for ss in tqdm(range(n_samples)):
-            #print("iteration: ",ss)
+            print("iteration: ",ss)
             step_trace_dict = self.step(model, trace_logger)
             if ss % thin_inverse == 0:
                 if store_in_sample_predictions:
@@ -136,7 +136,7 @@ class ModelSamplerCGM(Sampler):
                 model_log = trace_logger["Model"](model)
                 if model_log is not None:
                     model_trace.append(model_log)
-        #print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM samples")
+        print("-exit bartpy/bartpy/samplers/modelsampler.py ModelSamplerCGM samples")
         print("")
         return {
             "model": model_trace,

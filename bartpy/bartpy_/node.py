@@ -12,77 +12,77 @@ class TreeNode(object):
         - Links to children nodes
     """
     def __init__(self, split: Split, depth: int, left_child: 'TreeNode'=None, right_child: 'TreeNode'=None):
-        #print("enter bartpy/bartpy/node.py TreeNode __init__")
+        print("enter bartpy/bartpy/node.py TreeNode __init__")
         
         self.depth = depth
         self._split = split
         self._left_child = left_child
         self._right_child = right_child
-        #print("-exit bartpy/bartpy/node.py TreeNode __init__")
+        print("-exit bartpy/bartpy/node.py TreeNode __init__")
 
     @property
     def data(self) -> Data:
-        #print("enter bartpy/bartpy/node.py TreeNode data")
-        #print("-exit bartpy/bartpy/node.py TreeNode data")
+        print("enter bartpy/bartpy/node.py TreeNode data")
+        print("-exit bartpy/bartpy/node.py TreeNode data")
         return self._split.data
 
     @property
     def left_child(self) -> 'TreeNode':
-        #print("enter bartpy/bartpy/node.py TreeNode left_child")
-        #print("-exit bartpy/bartpy/node.py TreeNode left_child")
+        print("enter bartpy/bartpy/node.py TreeNode left_child")
+        print("-exit bartpy/bartpy/node.py TreeNode left_child")
         return self._left_child
 
     @property
     def right_child(self) -> 'TreeNode':
-        #print("enter bartpy/bartpy/node.py TreeNode right_child")
-        #print("-exit bartpy/bartpy/node.py TreeNode right_child")
+        print("enter bartpy/bartpy/node.py TreeNode right_child")
+        print("-exit bartpy/bartpy/node.py TreeNode right_child")
         return self._right_child
 
     @property
     def split(self):
-        #print("enter bartpy/bartpy/node.py TreeNode split")
-        #print("-exit bartpy/bartpy/node.py TreeNode split")
+        print("enter bartpy/bartpy/node.py TreeNode split")
+        print("-exit bartpy/bartpy/node.py TreeNode split")
         return self._split
 
     def update_y(self, y):
-        #print("enter bartpy/bartpy/node.py TreeNode update_y")
+        print("enter bartpy/bartpy/node.py TreeNode update_y")
         self.data.update_y(y)
         if self.left_child is not None:
             self.left_child.update_y(y)
             self.right_child.update_y(y)
-        #print("-exit bartpy/bartpy/node.py TreeNode update_y")
+        print("-exit bartpy/bartpy/node.py TreeNode update_y")
 
     def update_y_tilde_g(self, y_tilde_g):
-        #print("enter bartpy/bartpy/node.py TreeNode update_y_tilde_g")
+        print("enter bartpy/bartpy/node.py TreeNode update_y_tilde_g")
         self.data.update_y_tilde_g(y_tilde_g)
         if self.left_child is not None:
             self.left_child.update_y_tilde_g(y_tilde_g)
             self.right_child.update_y_tilde_g(y_tilde_g)
-        #print("-exit bartpy/bartpy/node.py TreeNode update_y_tilde_g")
+        print("-exit bartpy/bartpy/node.py TreeNode update_y_tilde_g")
 
     def update_y_tilde_h(self, y_tilde_h):
-        #print("enter bartpy/bartpy/node.py TreeNode update_y_tilde_h")
+        print("enter bartpy/bartpy/node.py TreeNode update_y_tilde_h")
         self.data.update_y_tilde_h(y_tilde_h)
         if self.left_child is not None:
             self.left_child.update_y_tilde_h(y_tilde_h)
             self.right_child.update_y_tilde_h(y_tilde_h)
-        #print("-exit bartpy/bartpy/node.py TreeNode update_y_tilde_h")
+        print("-exit bartpy/bartpy/node.py TreeNode update_y_tilde_h")
 
     def update_W(self, W):
-        #print("enter bartpy/bartpy/node.py TreeNode update_W")
+        print("enter bartpy/bartpy/node.py TreeNode update_W")
         self.data.update_W(W)
         if self.left_child is not None:
             self.left_child.update_W(W)
             self.right_child.update_W(W)
-        #print("-exit bartpy/bartpy/node.py TreeNode update_W")
+        print("-exit bartpy/bartpy/node.py TreeNode update_W")
         
     def update_p(self, p):
-        #print("enter bartpy/bartpy/node.py TreeNode update_p")
+        print("enter bartpy/bartpy/node.py TreeNode update_p")
         self.data.update_p(p)
         if self.left_child is not None:
             self.left_child.update_p(p)
             self.right_child.update_p(p)
-        #print("-exit bartpy/bartpy/node.py TreeNode update_p")
+        print("-exit bartpy/bartpy/node.py TreeNode update_p")
         
 
 
@@ -95,31 +95,31 @@ class LeafNode(TreeNode):
     """
 
     def __init__(self, split: Split, depth=0, value=0.0):
-        #print("enter bartpy/bartpy/node.py LeafNode __init__")
+        print("enter bartpy/bartpy/node.py LeafNode __init__")
         self._value = value
         super().__init__(split, depth, None, None)
-        #print("-exit bartpy/bartpy/node.py LeafNode __init__")
+        print("-exit bartpy/bartpy/node.py LeafNode __init__")
 
     def set_value(self, value: float) -> None:
-        #print("enter bartpy/bartpy/node.py LeafNode set_value")
+        print("enter bartpy/bartpy/node.py LeafNode set_value")
         self._value = value
-        #print("-exit bartpy/bartpy/node.py LeafNode set_value")
+        print("-exit bartpy/bartpy/node.py LeafNode set_value")
 
     @property
     def current_value(self):
-        #print("enter bartpy/bartpy/node.py LeafNode current_value")
-        #print("-exit bartpy/bartpy/node.py LeafNode current_value")
+        print("enter bartpy/bartpy/node.py LeafNode current_value")
+        print("-exit bartpy/bartpy/node.py LeafNode current_value")
         return self._value
 
     def predict(self) -> float:
-        #print("enter bartpy/bartpy/node.py LeafNode predict")
-        #print("-exit bartpy/bartpy/node.py LeafNode predict")
+        print("enter bartpy/bartpy/node.py LeafNode predict")
+        print("-exit bartpy/bartpy/node.py LeafNode predict")
         return self.current_value
 
     def is_splittable(self) -> bool:
-        #print("enter bartpy/bartpy/node.py LeafNode is_splittable")
+        print("enter bartpy/bartpy/node.py LeafNode is_splittable")
         output = self.data.X.is_at_least_one_splittable_variable()
-        #print("-exit bartpy/bartpy/node.py LeafNode is_splittable")
+        print("-exit bartpy/bartpy/node.py LeafNode is_splittable")
         return output
 
 
@@ -130,20 +130,20 @@ class DecisionNode(TreeNode):
     """
 
     def __init__(self, split: Split, left_child_node: TreeNode, right_child_node: TreeNode, depth=0):
-        #print("enter bartpy/bartpy/node.py DecisionNode__init__")
+        print("enter bartpy/bartpy/node.py DecisionNode__init__")
         super().__init__(split, depth, left_child_node, right_child_node)
-        #print("-exit bartpy/bartpy/node.py DecisionNode__init__")
+        print("-exit bartpy/bartpy/node.py DecisionNode__init__")
 
     def is_prunable(self) -> bool:
-        #print("enter bartpy/bartpy/node.py DecisionNode")
+        print("enter bartpy/bartpy/node.py DecisionNode")
         output = type(self.left_child) == LeafNode and type(self.right_child) == LeafNode
-        #print("-exit bartpy/bartpy/node.py DecisionNode")
+        print("-exit bartpy/bartpy/node.py DecisionNode")
         return output
 
     def most_recent_split_condition(self) -> SplitCondition:
-        #print("enter bartpy/bartpy/node.py DecisionNode")
+        print("enter bartpy/bartpy/node.py DecisionNode")
         output = self.left_child.split.most_recent_split_condition()
-        #print("-exit bartpy/bartpy/node.py DecisionNode")
+        print("-exit bartpy/bartpy/node.py DecisionNode")
         return output
 
 
@@ -152,13 +152,13 @@ def split_node(node: LeafNode, split_conditions: Tuple[SplitCondition, SplitCond
     Converts a `LeafNode` into an internal `DecisionNode` by applying the split condition
     The left node contains all values for the splitting variable less than the splitting value
     """
-    #print("enter bartpy/bartpy/node.py split_node")
+    print("enter bartpy/bartpy/node.py split_node")
     left_split = node.split + split_conditions[0]
     split_conditions[1].carry_n_obsv = node.data.X.n_obsv - left_split.data.X.n_obsv
     split_conditions[1].carry_y_sum = node.data.y.summed_y() - left_split.data.y.summed_y()
     
     #if (node.data.W is not None) and (node.data.p is not None):
-    #    #print("node.data.W is not None=", node.data.W is not None)
+    #    print("node.data.W is not None=", node.data.W is not None)
     #    split_conditions[1].carry_W_sum = node.data.W.summed_W() - left_split.data.W.summed_W()
     #    split_conditions[1].carry_p_sum = node.data.p.summed_p() - left_split.data.p.summed_p()
     #    split_conditions[1].carry_y_tilde_g_sum = (
@@ -173,22 +173,22 @@ def split_node(node: LeafNode, split_conditions: Tuple[SplitCondition, SplitCond
                         LeafNode(left_split, depth=node.depth + 1),
                         LeafNode(right_split, depth=node.depth + 1),
                         depth=node.depth)
-    #print("-exit bartpy/bartpy/node.py split_node")
+    print("-exit bartpy/bartpy/node.py split_node")
     return output
 
 
 def deep_copy_node(node: TreeNode):
-    #print("enter bartpy/bartpy/node.py deep_copy_node")
+    print("enter bartpy/bartpy/node.py deep_copy_node")
     if type(node) == LeafNode:
         node: LeafNode = node
         output = LeafNode(node.split.out_of_sample_conditioner(), value=node.current_value, depth=node.depth)
-        #print("-exit bartpy/bartpy/node.py deep_copy_node")
+        print("-exit bartpy/bartpy/node.py deep_copy_node")
         return output
     elif type(node) == DecisionNode:
         node: DecisionNode = node
         output = DecisionNode(node.split.out_of_sample_conditioner(), node.left_child, node.right_child, depth=node.depth)
-        #print("-exit bartpy/bartpy/node.py deep_copy_node")
+        print("-exit bartpy/bartpy/node.py deep_copy_node")
         return output
     else:
         raise TypeError("Unsupported node type")
-    #print("-exit bartpy/bartpy/node.py deep_copy_node")
+    print("-exit bartpy/bartpy/node.py deep_copy_node")

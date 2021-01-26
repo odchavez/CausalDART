@@ -176,10 +176,10 @@ class ModelCGM:
             self.n_trees_h = len(trees_h)
             self._trees_h = trees_h
         
-        #print("self._trees_g=",self._trees_g)
-        #print("self._trees_h=",self._trees_h)
-        #print("type(self._trees_g)=",type(self._trees_g))
-        #print("type(self._trees_h)=",type(self._trees_h))
+        print("self._trees_g=",self._trees_g)
+        print("self._trees_h=",self._trees_h)
+        print("type(self._trees_g)=",type(self._trees_g))
+        print("type(self._trees_h)=",type(self._trees_h))
         print("-exit bartpy/bartpy/model.py ModelCGM __init__")
 
     def initialize_trees_g(self) -> List[Tree]:

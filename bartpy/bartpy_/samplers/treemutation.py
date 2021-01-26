@@ -19,14 +19,14 @@ class TreeMutationSampler(Sampler):
     """
 
     def sample(self, model: Model, tree: Tree) -> Optional[TreeMutation]:
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationSampler sample")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationSampler sample")
         raise NotImplementedError()
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationSampler sample")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationSampler sample")
 
     def step(self, model: Model, tree: Tree) -> Optional[TreeMutation]:
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationSampler step")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationSampler step")
         raise NotImplementedError()
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationSampler step")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationSampler step")
 
 
 class TreeMutationProposer(ABC):
@@ -50,9 +50,9 @@ class TreeMutationProposer(ABC):
         TreeMutation
             A way to update the input tree
         """
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationProposer propose")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationProposer propose")
         raise NotImplementedError()
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationProposer propose")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationProposer propose")
 
 
 class TreeMutationLikihoodRatio(ABC):
@@ -80,9 +80,9 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged ratio of likelihoods
         """
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio")
         output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio(model, tree, mutation) + self.log_tree_ratio(model, tree, mutation)
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio")
         return output
 
     def log_probability_ratio_cgm_g(self, model: ModelCGM, tree: Tree, mutation: TreeMutation) -> float:
@@ -105,9 +105,9 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged ratio of likelihoods
         """
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_g")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_g")
         output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio_cgm_g(model, tree, mutation) + self.log_tree_ratio_cgm(model, tree, mutation)
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_g")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_g")
         return output
 
     def log_probability_ratio_cgm_h(self, model: ModelCGM, tree: Tree, mutation: TreeMutation) -> float:
@@ -130,9 +130,9 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged ratio of likelihoods
         """
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_h")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_h")
         output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio_cgm_h(model, tree, mutation) + self.log_tree_ratio_cgm(model, tree, mutation)
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_h")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_h")
         return output
     
     @abstractmethod
@@ -154,9 +154,9 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged likihood ratio
         """
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_transition_ratio")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_transition_ratio")
         raise NotImplementedError()
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_transition_ratio")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_transition_ratio")
 
     @abstractmethod
     def log_tree_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -> float:
@@ -178,9 +178,9 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged likihood ratio
         """
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio")
         raise NotImplementedError()
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio")
 
     @abstractmethod
     def log_tree_ratio_cgm(self, model: ModelCGM, tree: Tree, mutation: TreeMutation) -> float:
@@ -202,9 +202,9 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged likihood ratio
         """
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio_cgm")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio_cgm")
         raise NotImplementedError()
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio_cgm")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio_cgm")
         
     @abstractmethod
     def log_likihood_ratio(self, model: Model, tree: Tree, mutation: TreeMutation):
@@ -226,9 +226,9 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged likihood ratio
         """
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio")
         raise NotImplementedError()
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio")
         
     @abstractmethod
     def log_likihood_ratio_cgm_g(self, model: ModelCGM, tree: Tree, mutation: TreeMutation):
@@ -250,9 +250,9 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged likihood ratio
         """
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_g")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_g")
         raise NotImplementedError()
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_g")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_g")
     
     @abstractmethod
     def log_likihood_ratio_cgm_h(self, model: ModelCGM, tree: Tree, mutation: TreeMutation):
@@ -274,6 +274,6 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged likihood ratio
         """
-        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_h")
+        print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_h")
         raise NotImplementedError()
-        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_h")
+        print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_likihood_ratio_cgm_h")
