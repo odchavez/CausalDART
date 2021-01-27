@@ -55,15 +55,23 @@ class LeafNodeSampler(Sampler):
 
     def sample_cgm_g(self, model: ModelCGM, node: LeafNode) -> float:
         print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_g")
-        prior_var = model.sigma_m ** 2
-        n = node.data.X.n_obsv
-        #likihood_var = (model.sigma_g.current_value() ** 2) / n
-        likihood_var = (model.sigma.current_value() ** 2) / n
-        likihood_mean = node.data.y.summed_y() / n
-        posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
-        posterior_mean = likihood_mean * (prior_var / (likihood_var + prior_var))
-        output = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees, 0.5))
-        return output
+        #prior_var = model.sigma_m ** 2
+        #n = node.data.X.n_obsv
+        #
+        #print("node.data.X.n_obsv=", node.data.X.n_obsv)
+        #print("model.data.X.n_obsv=", model.data.X.n_obsv)
+        #print("np.sum( node.data.mask.astype(int))=", np.sum(node.data.mask.astype(int)))
+        #print("node.data.mask.astype(int)=", node.data.mask.astype(int))
+        #print("(~node.data.mask).astype(int)=", (~node.data.mask).astype(int))
+        #print("node.data.mask=", node.data.mask)
+        #print("~node.data.mask=", ~node.data.mask)
+        ##likihood_var = (model.sigma_g.current_value() ** 2) / n
+        #likihood_var = (model.sigma.current_value() ** 2) / n
+        #likihood_mean = node.data.y.summed_y() / n
+        #posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
+        #posterior_mean = likihood_mean * (prior_var / (likihood_var + prior_var))
+        #output = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees, 0.5))
+        #return output
         ####################################################ABOVE CODE DOES NOT BELONG!!!!!
         prior_var = model.sigma_m ** 2
         W = node.data.W.values # needs to apply mask
@@ -74,12 +82,12 @@ class LeafNodeSampler(Sampler):
         posterior_variance = (
             1./(
                 (1./prior_var) + 
-                np.sum( ~node.data.mask.astype(int) * one_over_sigma_g_i_sqrd)
+                np.sum( (~node.data.mask).astype(int) * one_over_sigma_g_i_sqrd)
             )
         )
         
         post_mean_numerator = np.sum( 
-            ~node.data.mask.astype(int) * (node.data.y.values*one_over_sigma_g_i_sqrd)
+            (~node.data.mask).astype(int) * (node.data.y.values*one_over_sigma_g_i_sqrd)
         )
         posterior_mean = post_mean_numerator * posterior_variance
 
@@ -89,15 +97,15 @@ class LeafNodeSampler(Sampler):
 
     def sample_cgm_h(self, model: ModelCGM, node: LeafNode) -> float:
         print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_h")
-        prior_var = model.sigma_m ** 2
-        n = node.data.X.n_obsv
-        #likihood_var = (model.sigma_h.current_value() ** 2) / n
-        likihood_var = (model.sigma.current_value() ** 2) / n
-        likihood_mean = node.data.y.summed_y() / n
-        posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
-        posterior_mean = likihood_mean * (prior_var / (likihood_var + prior_var))
-        output = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees, 0.5))
-        return output
+        #prior_var = model.sigma_m ** 2
+        #n = node.data.X.n_obsv
+        ##likihood_var = (model.sigma_h.current_value() ** 2) / n
+        #likihood_var = (model.sigma.current_value() ** 2) / n
+        #likihood_mean = node.data.y.summed_y() / n
+        #posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
+        #posterior_mean = likihood_mean * (prior_var / (likihood_var + prior_var))
+        #output = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees, 0.5))
+        #return output
         ####################################################ABOVE CODE DOES NOT BELONG!!!!!
         
         prior_var = model.sigma_m ** 2
