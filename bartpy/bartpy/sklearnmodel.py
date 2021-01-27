@@ -125,6 +125,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  thin: float = 0.1,
                  alpha: float = 0.95,
                  beta: float = 2.,
+                 k: float = 2.,
                  store_in_sample_predictions: bool=False,
                  store_acceptance_trace: bool=False,
                  tree_sampler: TreeMutationSampler=get_tree_sampler(0.5, 0.5),
@@ -148,6 +149,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 self.p_prune = 0.5
                 self.alpha = alpha
                 self.beta = beta
+                self.k = k
                 self.thin = thin
                 self.n_jobs = n_jobs
                 self.store_in_sample_predictions = store_in_sample_predictions
@@ -313,6 +315,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             #n_trees_h=self.n_trees,
             alpha=self.alpha,
             beta=self.beta,
+            k=self.k,
             initializer=self.initializer)
         print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _construct_model_cgm")
         return self.model
