@@ -19,25 +19,25 @@ class Sigma:
     """
 
     def __init__(self, alpha: float, beta: float, scaling_factor: float):
-        print("enter bartpy/bartpy/sigma.py Sigma __init__")        
+        #print("enter bartpy/bartpy/sigma.py Sigma __init__")        
         self.alpha = alpha
         self.beta = beta
         self._current_value = 1.0
         self.scaling_factor = scaling_factor
-        print("-exit bartpy/bartpy/sigma.py Sigma __init__")
+        #print("-exit bartpy/bartpy/sigma.py Sigma __init__")
 
     def set_value(self, value: float) -> None:
-        print("enter bartpy/bartpy/sigma.py Sigma set_value")
-        print("-exit bartpy/bartpy/sigma.py Sigma set_value")
+        #print("enter bartpy/bartpy/sigma.py Sigma set_value")
+        #print("-exit bartpy/bartpy/sigma.py Sigma set_value")
         self._current_value = value
 
     def current_value(self) -> float:
-        print("enter bartpy/bartpy/sigma.py Sigma current_value")
-        print("-exit bartpy/bartpy/sigma.py Sigma current_value")
+        #print("enter bartpy/bartpy/sigma.py Sigma current_value")
+        #print("-exit bartpy/bartpy/sigma.py Sigma current_value")
         return self._current_value
 
     def current_unnormalized_value(self) -> float:
-        print("enter bartpy/bartpy/sigma.py Sigma current_value")
+        #print("enter bartpy/bartpy/sigma.py Sigma current_value")
         output = self.current_value() * self.scaling_factor
-        print("-exit bartpy/bartpy/sigma.py Sigma current_value")
+        #print("-exit bartpy/bartpy/sigma.py Sigma current_value")
         return output

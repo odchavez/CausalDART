@@ -13,20 +13,20 @@ from bartpy.bartpy.tree import Tree
 
 
 def uniformly_sample_grow_mutation(tree: Tree) -> TreeMutation:
-    print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py uniformly_sample_grow_mutation")
+    #print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py uniformly_sample_grow_mutation")
     node = random_splittable_leaf_node(tree)
     updated_node = sample_split_node(node)
     output = GrowMutation(node, updated_node)
-    print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py uniformly_sample_grow_mutation")
+    #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py uniformly_sample_grow_mutation")
     return output
 
 
 def uniformly_sample_prune_mutation(tree: Tree) -> TreeMutation:
-    print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py uniformly_sample_prune_mutation")
+    #print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py uniformly_sample_prune_mutation")
     node = random_prunable_decision_node(tree)
     updated_node = LeafNode(node.split, depth=node.depth)
     output = PruneMutation(node, updated_node)
-    print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py uniformly_sample_prune_mutation")
+    #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py uniformly_sample_prune_mutation")
     return output
 
 
@@ -35,7 +35,7 @@ class UniformMutationProposer(TreeMutationProposer):
     def __init__(self,
                  prob_method: List[float]=None,
                  prob_method_lookup: Mapping[Callable[[Tree], TreeMutation], float]=None):
-        print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer __init__")
+        #print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer __init__")
         if prob_method_lookup is not None:
             self.prob_method_lookup = prob_method_lookup
         else:
@@ -46,22 +46,22 @@ class UniformMutationProposer(TreeMutationProposer):
         self.method_sampler = DiscreteSampler(list(self.prob_method_lookup.keys()),
                                               list(self.prob_method_lookup.values()),
                                               cache_size=1000)
-        print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer __init__")
+        #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer __init__")
 
     def propose(self, tree: Tree) -> TreeMutation:
-        print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer propose")
+        #print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer propose")
         method = self.method_sampler.sample()
         try:
             output = method(tree)
-            print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer propose")
+            #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer propose")
             return output
         except NoSplittableVariableException:
             output = self.propose(tree)
-            print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer propose")
+            #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer propose")
             return output
         except NoPrunableNodeException:
             output = self.propose(tree)
-            print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer propose")
+            #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py UniformMutationProposer propose")
             return output
 
 
@@ -70,14 +70,14 @@ def random_splittable_leaf_node(tree: Tree) -> LeafNode:
     Returns a random leaf node that can be split in a non-degenerate way
     i.e. a random draw from the set of leaf nodes that have at least two distinct values in their covariate matrix
     """
-    print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py random_splittable_leaf_node")
+    #print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py random_splittable_leaf_node")
     splittable_nodes = tree.splittable_leaf_nodes
     if len(splittable_nodes) == 0:
-        print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py random_splittable_leaf_node")
+        #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py random_splittable_leaf_node")
         raise NoSplittableVariableException()
     else:
         output = np.random.choice(splittable_nodes)
-        print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py random_splittable_leaf_node")
+        #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py random_splittable_leaf_node")
         return output
 
 
@@ -86,12 +86,12 @@ def random_prunable_decision_node(tree: Tree) -> DecisionNode:
     Returns a random decision node that can be pruned
     i.e. a random draw from the set of decision nodes that have two leaf node children
     """
-    print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py random_prunable_decision_node")
+    #print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py random_prunable_decision_node")
     leaf_parents = tree.prunable_decision_nodes
     if len(leaf_parents) == 0:
         raise NoPrunableNodeException()
     output = np.random.choice(leaf_parents)
-    print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py random_prunable_decision_node")
+    #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py random_prunable_decision_node")
     return output
 
 
@@ -105,14 +105,14 @@ def sample_split_condition(node: LeafNode) -> Optional[Tuple[SplitCondition, Spl
 
     Returns None if there isn't a possible non-degenerate split
     """
-    print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py sample_split_condition")
+    #print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py sample_split_condition")
     split_variable = np.random.choice(list(node.split.data.X.splittable_variables()))
     split_value = node.data.X.random_splittable_value(split_variable)
     if split_value is None:
-        print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py sample_split_condition")
+        #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py sample_split_condition")
         return None
     output = SplitCondition(split_variable, split_value, le), SplitCondition(split_variable, split_value, gt)
-    print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py sample_split_condition")
+    #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py sample_split_condition")
     return output
 
 
@@ -121,8 +121,8 @@ def sample_split_node(node: LeafNode) -> DecisionNode:
     Split a leaf node into a decision node with two leaf children
     The variable and value to split on is determined by sampling from their respective distributions
     """
-    print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py sample_split_node")
+    #print("enter bartpy/bartpy/samplers/unconstrainedtree/proposer.py sample_split_node")
     conditions = sample_split_condition(node)
     output = split_node(node, conditions)
-    print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py sample_split_node")
+    #print("-exit bartpy/bartpy/samplers/unconstrainedtree/proposer.py sample_split_node")
     return output

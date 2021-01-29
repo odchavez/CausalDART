@@ -8,6 +8,6 @@ class Sampler(ABC):
 
     @abstractmethod
     def step(self, model: Model, tree: Tree) -> bool:
-        print("enter bartpy/bartpy/samplers/sampler.py Sampler step")
+        #print("enter bartpy/bartpy/samplers/sampler.py Sampler step")
         raise NotImplementedError()
-        print("-exit bartpy/bartpy/samplers/sampler.py Sampler step")
+        #print("-exit bartpy/bartpy/samplers/sampler.py Sampler step")

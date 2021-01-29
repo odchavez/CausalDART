@@ -18,13 +18,13 @@ class Initializer(object):
     """
 
     def initialize_tree(self, tree: Tree) -> None:
-        print("enter bartpy/bartpy/initializers/initializer.py Initializer initialize_tree")
+        #print("enter bartpy/bartpy/initializers/initializer.py Initializer initialize_tree")
         
         pass
-        print("-exit bartpy/bartpy/initializers/initializer.py Initializer initialize_tree")
+        #print("-exit bartpy/bartpy/initializers/initializer.py Initializer initialize_tree")
 
     def initialize_trees(self, trees: Generator[Tree, None, None]) -> None:
-        print("enter bartpy/bartpy/initializers/initializer.py Initializer initialize_trees")
+        #print("enter bartpy/bartpy/initializers/initializer.py Initializer initialize_trees")
         for tree in trees:
             self.initialize_tree(tree)
-        print("-exit bartpy/bartpy/initializers/initializer.py Initializer initialize_trees")
+        #print("-exit bartpy/bartpy/initializers/initializer.py Initializer initialize_trees")

@@ -8,72 +8,66 @@ from bartpy.bartpy.sigma import Sigma
 class SigmaSampler(Sampler):
 
     def step(self, model: Model, sigma: Sigma) -> float:
-        print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler step")
+        #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler step")
         sample_value = self.sample(model, sigma)
         sigma.set_value(sample_value)
-        print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler step")
+        #print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler step")
         return sample_value
     
     def step_cgm(self, model: ModelCGM, sigma: Sigma) -> float:
-        print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm")
+        #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm")
         sample_value = self.sample_cgm(model, sigma)
         sigma.set_value(sample_value)
-        print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm")
+        #print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm")
         return sample_value
     
     def step_cgm_g(self, model: ModelCGM, sigma: Sigma) -> float:
-        print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm_g")
+        #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm_g")
         sample_value = self.sample_cgm_g(model, sigma)
         sigma.set_value(sample_value)
-        print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm_g")
+        #print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm_g")
         return sample_value
     
     def step_cgm_h(self, model: ModelCGM, sigma: Sigma) -> float:
-        print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm_h")
+        #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm_h")
         sample_value = self.sample_cgm_h(model, sigma)
         sigma.set_value(sample_value)
-        print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm_h")
+        #print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm_h")
         return sample_value
 
     @staticmethod
     def sample(model: Model, sigma: Sigma) -> float:
-        print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler sample")
+        #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler sample")
         posterior_alpha = sigma.alpha + (model.data.X.n_obsv / 2.)
         posterior_beta = sigma.beta + (0.5 * (np.sum(np.square(model.residuals()))))
         draw = np.power(np.random.gamma(posterior_alpha, 1./posterior_beta), -0.5)
-        print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler sample")
+        #print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler sample")
         return draw
 
     @staticmethod
     def sample_cgm(model: ModelCGM, sigma: Sigma) -> float:
-        print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm")
+        #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm")
         paw = model.data.p.values
         posterior_alpha = sigma.alpha + (model.data.X.n_obsv / 2.)
         posterior_beta = sigma.beta + (0.5 * (np.sum(paw*np.square(model.residuals()))))
         draw = np.power(np.random.gamma(posterior_alpha, 1./posterior_beta), -0.5)
-        
-        #print("Residuals contribution:", (0.5 * (np.sum(np.square(model.residuals())))))
-        #print("sigma draw:", draw)
-        print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm")
+        #print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm")
         return draw
     
     @staticmethod
     def sample_cgm_g(model: ModelCGM, sigma: Sigma) -> float:
-        print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm_g")
+        #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm_g")
         posterior_alpha = sigma.alpha + (model.data.X.n_obsv / 2.)
         posterior_beta = sigma.beta + (0.5 * (np.sum(np.square(model.residuals_g()))))
         draw = np.power(np.random.gamma(posterior_alpha, 1./posterior_beta), -0.5)
-        
-        #print("Residuals contribution:", (0.5 * (np.sum(np.square(model.residuals())))))
-        #print("sigma draw:", draw)
-        print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm_g")
+        #print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm_g")
         return draw
     
     @staticmethod
     def sample_cgm_h(model: ModelCGM, sigma: Sigma) -> float:
-        print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm_h")
+        #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm_h")
         posterior_alpha = sigma.alpha + (model.data.X.n_obsv / 2.)
         posterior_beta = sigma.beta + (0.5 * (np.sum(np.square(model.residuals_h()))))
         draw = np.power(np.random.gamma(posterior_alpha, 1./posterior_beta), -0.5)
-        print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm_h")
+        #print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm_h")
         return draw

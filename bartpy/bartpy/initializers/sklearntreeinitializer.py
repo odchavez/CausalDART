@@ -21,15 +21,15 @@ class SklearnTreeInitializer(Initializer):
                  max_depth: int=4,
                  min_samples_split: int=2,
                  loss: str='ls'):
-        print("enter bartpy/bartpy/initializers/sklearntreeinitializer.py SklearnTreeInitializer __init__")
+        #print("enter bartpy/bartpy/initializers/sklearntreeinitializer.py SklearnTreeInitializer __init__")
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
         self.loss = loss
-        print("-exit bartpy/bartpy/initializers/sklearntreeinitializer.py SklearnTreeInitializer __init__")
+        #print("-exit bartpy/bartpy/initializers/sklearntreeinitializer.py SklearnTreeInitializer __init__")
 
     def initialize_tree(self,
                         tree: Tree) -> None:
-        print("enter bartpy/bartpy/initializers/sklearntreeinitializer.py SklearnTreeInitializer initialize_tree")
+        #print("enter bartpy/bartpy/initializers/sklearntreeinitializer.py SklearnTreeInitializer initialize_tree")
         params = {
             'n_estimators': 1,
             'max_depth': self.max_depth,
@@ -37,13 +37,13 @@ class SklearnTreeInitializer(Initializer):
             'learning_rate': 0.8,
             'loss': self.loss
         }
-        print("initializing GradientBoostingRegressor......................WHY?")
+        #print("initializing GradientBoostingRegressor......................WHY?")
         clf = GradientBoostingRegressor(**params)
-        print("fitting GradientBoostingRegressor...........................WHY?")
+        #print("fitting GradientBoostingRegressor...........................WHY?")
         fit = clf.fit(tree.nodes[0].data.X.data, tree.nodes[0].data.y.data)
         sklearn_tree = fit.estimators_[0][0].tree_
         map_sklearn_tree_into_bartpy(tree, sklearn_tree)
-        print("-exit bartpy/bartpy/initializers/sklearntreeinitializer.py SklearnTreeInitializer initialize_tree")
+        #print("-exit bartpy/bartpy/initializers/sklearntreeinitializer.py SklearnTreeInitializer initialize_tree")
 
 
 def map_sklearn_split_into_bartpy_split_conditions(sklearn_tree, index: int) -> Tuple[SplitCondition, SplitCondition]:
@@ -59,26 +59,26 @@ def map_sklearn_split_into_bartpy_split_conditions(sklearn_tree, index: int) -> 
     -------
 
     """
-    print("enter bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_split_into_bartpy_split_conditions")
+    #print("enter bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_split_into_bartpy_split_conditions")
     output = (
         SplitCondition(sklearn_tree.feature[index], sklearn_tree.threshold[index], le),
         SplitCondition(sklearn_tree.feature[index], sklearn_tree.threshold[index], gt)
     )
-    print("-exit bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_split_into_bartpy_split_conditions")
+    #print("-exit bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_split_into_bartpy_split_conditions")
     return output
 
 
 def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
-    print("enter bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_tree_into_bartpy")
+    #print("enter bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_tree_into_bartpy")
     nodes = [None for x in sklearn_tree.children_left]
     nodes[0] = bartpy_tree.nodes[0]
 
     def search(index: int=0):
-        print("enter bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_tree_into_bartpy search")
+        #print("enter bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_tree_into_bartpy search")
         left_child_index, right_child_index = sklearn_tree.children_left[index], sklearn_tree.children_right[index]
 
         if left_child_index == -1:  # Trees are binary splits, so only need to check left tree
-            print("-exit bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_tree_into_bartpy search")
+            #print("-exit bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_tree_into_bartpy search")
             return
 
         searched_node: LeafNode = nodes[index]
@@ -100,8 +100,8 @@ def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
 
         search(left_child_index)
         search(right_child_index)
-        print("exit bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_tree_into_bartpy search")
+        #print("exit bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_tree_into_bartpy search")
 
     search()
-    print("-exit bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_tree_into_bartpy")
+    #print("-exit bartpy/bartpy/initializers/sklearntreeinitializer.py map_sklearn_tree_into_bartpy")
 

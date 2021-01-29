@@ -29,11 +29,11 @@ class SampleSchedule:
                  tree_sampler: TreeMutationSampler,
                  leaf_sampler: LeafNodeSampler,
                  sigma_sampler: SigmaSampler):
-        print("enter bartpy/bartpy/samplers/schedule.py SampleSchedule __init__")
+        #print("enter bartpy/bartpy/samplers/schedule.py SampleSchedule __init__")
         self.leaf_sampler = leaf_sampler
         self.sigma_sampler = sigma_sampler
         self.tree_sampler = tree_sampler
-        print("-exit bartpy/bartpy/samplers/schedule.py SampleSchedule __init__")
+        #print("-exit bartpy/bartpy/samplers/schedule.py SampleSchedule __init__")
 
     def steps(self, model: Model) -> Generator[Tuple[Text, Callable[[], float]], None, None]:
         """
@@ -49,14 +49,14 @@ class SampleSchedule:
         Generator[Callable[[Model], Sampler], None, None]
             A generator a function to be called
         """
-        print("enter bartpy/bartpy/samplers/schedule.py SampleSchedule steps")
+        #print("enter bartpy/bartpy/samplers/schedule.py SampleSchedule steps")
 
         for tree in model.refreshed_trees():
             yield "Tree", lambda: self.tree_sampler.step(model, tree)
             for leaf_node in tree.leaf_nodes:
                 yield "Node", lambda: self.leaf_sampler.step(model, leaf_node)
         yield "Node", lambda: self.sigma_sampler.step(model, model.sigma)
-        print("-exit bartpy/bartpy/samplers/schedule.py SampleSchedule steps")
+        #print("-exit bartpy/bartpy/samplers/schedule.py SampleSchedule steps")
 
 
 class SampleScheduleCGM:
@@ -78,11 +78,11 @@ class SampleScheduleCGM:
                  tree_sampler: TreeMutationSampler,
                  leaf_sampler: LeafNodeSampler,
                  sigma_sampler: SigmaSampler):
-        print("enter bartpy/bartpy/samplers/schedule.py SampleScheduleCGM __init__")
+        #print("enter bartpy/bartpy/samplers/schedule.py SampleScheduleCGM __init__")
         self.leaf_sampler = leaf_sampler
         self.sigma_sampler = sigma_sampler
         self.tree_sampler = tree_sampler
-        print("-exit bartpy/bartpy/samplers/schedule.py SampleScheduleCGM __init__")
+        #print("-exit bartpy/bartpy/samplers/schedule.py SampleScheduleCGM __init__")
 
     def steps(self, model: ModelCGM) -> Generator[Tuple[Text, Callable[[], float]], None, None]:
         """
@@ -98,19 +98,18 @@ class SampleScheduleCGM:
         Generator[Callable[[Model], Sampler], None, None]
             A generator a function to be called
         """
-        print("enter bartpy/bartpy/samplers/schedule.py SampleScheduleCGM steps")
-        # sample g and sigma_g
+        #print("enter bartpy/bartpy/samplers/schedule.py SampleScheduleCGM steps")
+        # sample g
         for tree in model.refreshed_trees_g():
             yield "Tree", lambda: self.tree_sampler.step_cgm_g(model, tree)
             for leaf_node in tree.leaf_nodes:
                 yield "Node", lambda: self.leaf_sampler.step_cgm_g(model, leaf_node)
-        #yield "Node", lambda: self.sigma_sampler.step_cgm_g(model, model.sigma_g)
         
-        # sample h and sigma_h
+        # sample h
         for tree in model.refreshed_trees_h():
             yield "Tree", lambda: self.tree_sampler.step_cgm_h(model, tree)
             for leaf_node in tree.leaf_nodes:
                 yield "Node", lambda: self.leaf_sampler.step_cgm_h(model, leaf_node)
-        #yield "Node", lambda: self.sigma_sampler.step_cgm_h(model, model.sigma_h)
+        # sample sigma
         yield "Node", lambda: self.sigma_sampler.step_cgm(model, model.sigma)
-        print("-exit bartpy/bartpy/samplers/schedule.py SampleScheduleCGM steps")
+        #print("-exit bartpy/bartpy/samplers/schedule.py SampleScheduleCGM steps")
