@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
+from scipy.special import logit, expit
 
 
 def inv_log_odds(LO):
@@ -113,6 +114,9 @@ def make_basic_linear_data(p, N, y_0_1_noise_scale=0.0001, log_odds_noise_scale=
 
 def make_hahn_data(function_type="linear", effect_type="heterogeneous", n_in_study=500):
 # Five variables comprise x; the first three are continuous, drawn as standard normal random variables, the fourth is a dichotomous variable and the fifth is unordered categorical, taking three levels (denoted 1, 2, 3).
+    
+    np.random.seed(0)
+    
     def g(x):
         # g(1) = 2, g(2) = −1 and g(3) = −4
         return -2*x+5
@@ -169,3 +173,101 @@ def make_hahn_data(function_type="linear", effect_type="heterogeneous", n_in_stu
         }
     )
     return output
+
+def make_zaidi_data_A(n=250):
+
+    # data
+    np.random.seed(0)
+
+    X_1_15  = np.random.normal(loc=0, scale=1, size=(250,15))
+    X_16_30 = np.random.uniform(low=0,high=1, size=(250,15))
+    p_k = expit(X_1_15[:,:5] - X_16_30[:,:5])
+    X_31_35 = np.random.binomial(n=1, p=p_k)
+    X_36_40 = 5 + 0.75 * X_1_15[:,:5] * (X_16_30[:,:5] - X_31_35)
+    X=np.concatenate([X_1_15, X_16_30, X_31_35, X_36_40], axis=1)
+    
+    # propensity scores
+    true_pi = expit(
+        .3*np.sum(X_1_15[:,:5], axis=1) - 
+        .5*np.sum(X_16_30[:,5:10], axis=1) - 
+        .0001 * (np.sum(X_16_30[:,-5:], axis=1) + np.sum(X_31_35, axis=1)) +
+        .055 * np.sum(X_36_40, axis=1)
+    )
+    Xp=np.concatenate(
+        [
+            X_1_15, 
+            X_16_30, 
+            X_31_35, 
+            X_36_40, 
+            np.reshape(true_pi, (len(true_pi),1))
+        ], 
+        axis=1
+    )
+    
+    W = np.random.binomial(n=1, p=true_pi)
+    
+    # potential outcomes
+    error = np.random.normal(0, np.sqrt(0.0001), size=n)
+    
+    term = (
+        X_16_30[:,0] * np.exp(np.reshape(X_16_30[:,-1:], n)) + 
+        X_16_30[:,1] * np.exp(np.reshape(X_31_35[:,0], n)) + 
+        X_16_30[:,2] * np.exp(np.reshape(X_31_35[:,1], n)) + 
+        X_16_30[:,3] * np.exp(np.reshape(X_31_35[:,2], n)) 
+    )
+    f_of_X = term/(1+term)
+    
+    Y0 = 0.15 * np.sum(X_1_15[:,:5], axis=1) + 1.5 * np.exp( 1 + f_of_X ) + error
+    Y1 = (
+        np.sum(
+            2.15*X_1_15[:,:5] + 
+            2.75*X_1_15[:,:5]*X_1_15[:,:5] + 
+            10 * X_1_15[:,:5]*X_1_15[:,:5]*X_1_15[:,:5],
+            axis=1
+        ) + 
+        1.25*np.sqrt(.5 + 1.5*np.sum(X_36_40, axis=1)) + 
+        error
+    )
+    
+    tau = Y1-Y0
+    
+    Y = W*Y1 + (1-W)*Y0
+    
+    return {
+        "X":X, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
+    }
+
+def make_zaidi_data_B(n_in_study=250):
+    np.random.seed(0)
+
+    def h(x):
+        # g(1) = 2, g(2) = −1 and g(3) = −4
+        return -2*x+5
+    
+    # the data
+    X_1_3 = np.random.normal(loc=0, scale=1, size=(n_in_study, 3))
+    X_4 = np.random.binomial(n=1, p=0.25, size = n_in_study)
+    X_5 = np.random.binomial(n=2, p=0.5, size = n_in_study)
+    
+    # the intervention
+    true_pi = expit(0.1*X_1_3[:,0] - 0.001*X_1_3[:,1] + .275*X_1_3[:,2] - 0.03*X_4)
+    W = np.random.binomial(n=1, p=true_pi, size = n_in_study)
+    
+    # outcomes
+    f_of_X = -6 + h(X_5) + np.absolute(X_1_3[:,2] - 1)
+    error = np.random.normal(loc=0, scale=np.sqrt(0.0001), size = n_in_study)
+    Y0 = f_of_X - 15*X_1_3[:,2] + error
+    Y1 = f_of_X + (1 + 2*X_1_3[:,1]*X_1_3[:,2]) + error
+    
+    tau = Y1 - Y0
+    
+    Y = W*Y1 + (1-W)*Y0
+    
+    X=np.concatenate([X_1_3, X_4.reshape((n_in_study,1)), X_5.reshape((n_in_study,1))], axis=1)
+    
+    return {
+        "X":X, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
+    }
+    
+    
+    
