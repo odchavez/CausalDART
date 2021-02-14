@@ -4,6 +4,14 @@ from scipy.stats import norm
 from scipy.special import logit, expit
 
 
+def get_data(data, n, add_prop_score=0):
+    X = data["X"]
+    pi=data["p"]
+    if add_prop_score == 1:
+        X=np.concatenate([X, pi.reshape(n,1)], axis=1)
+    return data["Y"], data["W"], X, data["tau"], pi
+
+
 def inv_log_odds(LO):
     """
     args: LO , float or list of floats: representing Log Odds
@@ -232,9 +240,9 @@ def make_zaidi_data_A(n=250):
     tau = Y1-Y0
     
     Y = W*Y1 + (1-W)*Y0
-    
+    Xy = np.concatenate([X_1_15[:,:5],X_36_40],axis=1)
     return {
-        "X":X, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
+        "X":Xy, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
     }
 
 def make_zaidi_data_B(n_in_study=250):
@@ -269,5 +277,18 @@ def make_zaidi_data_B(n_in_study=250):
         "X":X, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
     }
     
-    
+def get_posterior_samples_data(stem,nreps,nsamp,nburn,ntree,nchain,thin,alpha,beta,k):
+    name = (
+    stem +
+    "_n_replications="+ str(nreps) +
+    "_n_samples=" + str(nsamp) +
+    "_n_burn=" + str(nburn) + 
+    "_n_trees=" + str(ntree) +
+    "_n_chains=" + str(nchain) + 
+    "_thin=" + str(thin) + 
+    "_alpha=" + str(alpha) + 
+    "_beta=" + str(beta) + 
+    "_k=" + str(k) + ".npy"
+    )
+    return np.load(name)   
     

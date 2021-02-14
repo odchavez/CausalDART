@@ -8,12 +8,6 @@ from tqdm import tqdm
 import simulate_data.simulate_data as sd
 import argparse
 
-def get_data(data, add_prop_score=0):
-    X = data["X"]
-    pi=data["p"]
-    if add_prop_score == 1:
-        X=np.concatenate([X, pi.reshape(n,1)], axis=1)
-    return data["Y"], data["W"], X, data["tau"], pi
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -69,16 +63,22 @@ def get_args():
         help='n observations',
         required=True
     )
-    parser.add_argument(
-        '--add_prop_score', type=int,
-        help='n observations',
-        required=False,
-        default=0
-    )
+    #parser.add_argument(
+    #    '--add_prop_score', type=int,
+    #    help='n observations',
+    #    required=False,
+    #    default=0
+    #)
     parser.add_argument(
         '--output_path', type=str,
         help='output_path',
         required=True
+    )
+    parser.add_argument(
+        '--model_type', type=str,
+        help='model_type - CBARTMM: Causal BART Mixture Model, CJHM: Causal Jennifer Hill Model ',
+        required=False,
+        default="CBARTMM"
     )
     return parser.parse_args()
 
@@ -87,6 +87,7 @@ args = get_args()
 
 
 output_name = (args.output_path + 
+               "_n_replications=" + str(args.N_replications) + 
                "_n_samples=" + str(args.n_samples) + 
                "_n_burn=" + str(args.n_burn) + 
                "_n_trees=" + str(args.n_trees) + 
@@ -101,49 +102,111 @@ output_name = (args.output_path +
 # data
 if args.output_path == "experiment_results/B/known/all_runs":
     data = sd.make_zaidi_data_B(args.n)
-    Y,W,X,tau,pi = get_data(data,0)
+    Y,W,X,tau,pi = sd.get_data(data,0)
     
 if args.output_path == "experiment_results/A/known/all_runs":
     data = sd.make_zaidi_data_A(args.n)
-    Y,W,X,tau,pi = get_data(data,0)
-
-if args.output_path == "experiment_results/B/unknown/all_runs":
-    data = sd.make_zaidi_data_B(args.n)
-    Y,W,X,tau,pi = get_data(data,1)
+    Y,W,X,tau,pi = sd.get_data(data,0)
     
-if args.output_path == "experiment_results/A/unknown/all_runs":
+if args.output_path == "experiment_results/B/known/CJHM/all_runs":
+    data = sd.make_zaidi_data_B(args.n)
+    Y,W,X,tau,pi = sd.get_data(data,0)
+    
+if args.output_path == "experiment_results/A/known/CJHM/all_runs":
     data = sd.make_zaidi_data_A(args.n)
-    Y,W,X,tau,pi = get_data(data,1)
+    Y,W,X,tau,pi = sd.get_data(data,0)
+    
+if args.output_path == "experiment_results/B/known/all_runs_with_ps":
+    data = sd.make_zaidi_data_B(args.n)
+    Y,W,X,tau,pi = sd.get_data(data,args.n,1)
+    
+if args.output_path == "experiment_results/A/known/all_runs_with_ps":
+    data = sd.make_zaidi_data_A(args.n)
+    Y,W,X,tau,pi = sd.get_data(data,args.n,1)
+    
+if args.output_path == "experiment_results/B/known/CJHM/all_runs_with_ps":
+    data = sd.make_zaidi_data_B(args.n)
+    Y,W,X,tau,pi = sd.get_data(data,args.n,1)
+    
+if args.output_path == "experiment_results/A/known/CJHM/all_runs_with_ps":
+    data = sd.make_zaidi_data_A(args.n)
+    Y,W,X,tau,pi = sd.get_data(data,args.n,1)
 
 Y_i_star = sd.get_Y_i_star(Y,W,pi)
 
-# define model
-kwargs = {
-    "model": "causal_gaussian_mixture"
-}
-# create the multiple instantiations of model objects
-model = []
-model_with_p = []
-for i in range(args.N_replications):
-    model.append(
-        SklearnModel(
-            n_samples=args.n_samples, 
-            n_burn=args.n_burn, 
-            n_trees=args.n_trees,
-            alpha = args.alpha, # priors for tree depth
-            beta = args.beta, # priors for tree depth
-            k=args.k,
-            thin=args.thin,
-            n_chains=args.n_chains,
-            n_jobs=-1,
-            store_in_sample_predictions=True,
-            **kwargs
+
+if args.model_type == "CBARTMM":
+    # define model
+    kwargs = {
+        "model": "causal_gaussian_mixture"
+    }
+    # create the multiple instantiations of model objects
+    model = []
+    for i in range(args.N_replications):
+        model.append(
+            SklearnModel(
+                n_samples=args.n_samples, 
+                n_burn=args.n_burn, 
+                n_trees=args.n_trees,
+                alpha = args.alpha, # priors for tree depth
+                beta = args.beta, # priors for tree depth
+                k=args.k,
+                thin=args.thin,
+                n_chains=args.n_chains,
+                n_jobs=-1,
+                store_in_sample_predictions=True,
+                **kwargs
+            )
         )
-    )
+        
+    posterior_samples = np.zeros((int(args.n_samples*args.n_chains*args.thin),args.n,args.N_replications))
+    for i in tqdm(range(args.N_replications)):
+        model[i].fit_CGM(X, Y_i_star, W, pi)
+        posterior_samples[:,:,i]=model[i].get_posterior_CATE()
+
+if args.model_type == "CJHM":
+    # define model
+    # create the multiple instantiations of model objects
+    model_0 = []
+    model_1 = []
+    for i in range(args.N_replications):
+        model_0.append(
+            SklearnModel(
+                n_samples=args.n_samples, 
+                n_burn=args.n_burn, 
+                n_trees=args.n_trees,
+                alpha = args.alpha, # priors for tree depth
+                beta = args.beta, # priors for tree depth
+                k=args.k,
+                thin=args.thin,
+                n_chains=args.n_chains,
+                n_jobs=-1,
+                store_in_sample_predictions=True,
+            )
+        )
+        model_1.append(
+            SklearnModel(
+                n_samples=args.n_samples, 
+                n_burn=args.n_burn, 
+                n_trees=args.n_trees,
+                alpha = args.alpha, # priors for tree depth
+                beta = args.beta, # priors for tree depth
+                k=args.k,
+                thin=args.thin,
+                n_chains=args.n_chains,
+                n_jobs=-1,
+                store_in_sample_predictions=True,
+            )
+        )
+        
+    posterior_samples = np.zeros((args.N_replications, args.n))
     
-posterior_samples = np.zeros((int(args.n_samples*args.n_chains*args.thin),args.n,args.N_replications))
-for i in tqdm(range(args.N_replications)):
-    model[i].fit_CGM(X, Y_i_star, W, pi)
-    posterior_samples[:,:,i]=model[i].get_posterior_CATE()
+    for i in tqdm(range(args.N_replications)):
+        
+        model_0[i].fit(X[W==0,:], Y[W==0])
+        model_1[i].fit(X[W==1,:], Y[W==1])
+
+        posterior_samples[i,:]= model_1[i].predict(X) - model_0[i].predict(X)
+        
 print("models fit successfully")    
 np.save(output_name, posterior_samples)
