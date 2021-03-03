@@ -292,3 +292,18 @@ def get_posterior_samples_data(stem,nreps,nsamp,nburn,ntree,nchain,thin,alpha,be
     )
     return np.load(name)   
     
+def get_posterior_samples_data_2(stem,nreps,nsamp,nburn,ntreeh,ntreeg,nchain,thin,alpha,beta,k):
+    name = (
+    stem +
+    "_n_replications="+ str(nreps) +
+    "_n_samples=" + str(nsamp) +
+    "_n_burn=" + str(nburn) + 
+    "_n_trees_h=" + str(ntreeh) +
+    "_n_trees_g=" + str(ntreeg) +
+    "_n_chains=" + str(nchain) + 
+    "_thin=" + str(thin) + 
+    "_alpha=" + str(alpha) + 
+    "_beta=" + str(beta) + 
+    "_k=" + str(k) + ".npy"
+    )
+    return np.load(name)   

@@ -130,7 +130,7 @@ class ModelCGM:
                  #trees: Optional[List[Tree]]=None,
                  trees_g: Optional[List[Tree]]=None,
                  trees_h: Optional[List[Tree]]=None,
-                 n_trees: int=50,
+                 #n_trees: int=50,
                  n_trees_g: int=50,
                  n_trees_h: int=50,
                  alpha: float=0.95,
@@ -149,11 +149,11 @@ class ModelCGM:
         self._prediction_g = None
         self._prediction_h = None
         self._initializer = initializer
-        self.n_trees = n_trees
+        #self.n_trees = n_trees
         
         if trees_g is None:
             #print("in if trees_g is None")
-            self.n_trees_g = n_trees#n_trees_g
+            self.n_trees_g = n_trees_g
             self._trees_g = self.initialize_trees_g()
             if self._initializer is not None:
                 #print("in self._initializer is not None")
@@ -165,7 +165,7 @@ class ModelCGM:
 
         if trees_h is None:
             #print("in if trees_h is None")
-            self.n_trees_h = n_trees#n_trees_h
+            self.n_trees_h = n_trees_h
             self._trees_h = self.initialize_trees_h()
             if self._initializer is not None:
                 #print("in self._initializer is not None")
@@ -202,7 +202,7 @@ class ModelCGM:
         ##print("self.predict_g()=",self.predict_g())
         W=self.data.W.values
         p=self.data.p.values
-        paw = W*p**2 + (1-W)*(1-p)**2
+        #paw = W*p**2 + (1-W)*(1-p)**2
         pbw = W*(1-p) - p*(1-W)
         ##print("Computing Residuals with self.data.y.values=", self.data.y.values)
         ##print("mean self.data.y.values=", np.mean(self.data.y.values))

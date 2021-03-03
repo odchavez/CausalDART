@@ -117,6 +117,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
 
     def __init__(self,
                  n_trees: int = 200,
+                 n_trees_h: int = 200,
+                 n_trees_g: int = 200,
                  n_chains: int = 4,
                  sigma_a: float = 0.001,
                  sigma_b: float = 0.001,
@@ -139,7 +141,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             if kwargs["model"] == 'causal_gaussian_mixture':
                 print("Causal Gaussian Mixture using Transformed Outcomes...")
                 self.model_type = 'causal_gaussian_mixture'
-                self.n_trees = n_trees
+                self.n_trees_h = n_trees_h
+                self.n_trees_g = n_trees_g
                 self.n_chains = n_chains
                 self.sigma_a = sigma_a
                 self.sigma_b = sigma_b
@@ -310,9 +313,9 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             sigma=self.sigma,
             sigma_h=self.sigma_h,
             sigma_g=self.sigma_g,
-            n_trees=self.n_trees,
-            #n_trees_g=self.n_trees,
-            #n_trees_h=self.n_trees,
+            #n_trees=self.n_trees,
+            n_trees_g=self.n_trees_g,
+            n_trees_h=self.n_trees_h,
             alpha=self.alpha,
             beta=self.beta,
             k=self.k,
@@ -724,3 +727,30 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         else:
             raise ValueError(
                 "get_posterior_CATE only possible if model.store_in_sample_predictions is `True`.  Either set the parameter to True or pass a non-None X parameter")
+            
+    def get_posterior(self) -> np.ndarray:
+        """
+        get the posterior predictive distribution of the target 
+        corresponding to the provided covariate matrix
+        If X is None, will predict based on training covariates
+
+        Prediction is based on the mean of all samples
+
+        Parameters
+        ----------
+        X: pd.DataFrame
+            covariates to predict from
+
+        Returns
+        -------
+        np.ndarray
+            posterior for the X covariates
+        """
+
+        if self.store_in_sample_predictions:
+            output = self.data.y.unnormalize_y( self._prediction_samples )
+            return output
+        else:
+            raise ValueError(
+                "get_posterior only possible if model.store_in_sample_predictions is `True`.  Either set the parameter to True or pass a non-None X parameter")
+
