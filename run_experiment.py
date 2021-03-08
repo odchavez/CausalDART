@@ -1,5 +1,5 @@
 """
-python run_experiment_data_B_known.py --n_samples 2000 --n_burn 2000 --n_trees 200 --n_chains 4 --thin 0.1 --alpha 0.95 --beta 2. --k 2.0 --n 250 --N_replications 2 --output_path "experiment_results/B/known/CBARTMM/all_runs"
+python run_experiment_data_B_known.py --n_samples 10000 --n_burn 2000 --n_trees 200 --n_chains 4 --thin 0.1 --alpha 0.95 --beta 2. --k 2.0 --n 250 --N_replications 2 --output_path "experiment_results/B/known/CBARTMM/all_runs"
 """
 
 import numpy as np
@@ -76,12 +76,12 @@ def get_args():
         help='n observations',
         required=True
     )
-    #parser.add_argument(
-    #    '--add_prop_score', type=int,
-    #    help='n observations',
-    #    required=False,
-    #    default=0
-    #)
+    parser.add_argument(
+        '--save_g_h_sigma', type=int,
+        help='save all samples after burn in from model fitting including g,h and sigma',
+        required=False,
+        default=0
+    )
     parser.add_argument(
         '--output_path', type=str,
         help='output_path',
@@ -112,7 +112,45 @@ output_name = (args.output_path +
                "_k=" + str(args.k) + 
                ".npy"
 )
-
+output_name_g = (args.output_path + 
+               "_n_replications=" + str(args.N_replications) + 
+               "_n_samples=" + str(args.n_samples) + 
+               "_n_burn=" + str(args.n_burn) + 
+               "_n_trees_h=" + str(args.n_trees_h) + 
+               "_n_trees_g=" + str(args.n_trees_g) + 
+               "_n_chains=" + str(args.n_chains) + 
+               "_thin=" + str(args.thin) + 
+               "_alpha=" + str(args.alpha) + 
+               "_beta=" + str(args.beta) + 
+               "_k=" + str(args.k) + 
+               "_g.npy"
+)
+output_name_h = (args.output_path + 
+               "_n_replications=" + str(args.N_replications) + 
+               "_n_samples=" + str(args.n_samples) + 
+               "_n_burn=" + str(args.n_burn) + 
+               "_n_trees_h=" + str(args.n_trees_h) + 
+               "_n_trees_g=" + str(args.n_trees_g) + 
+               "_n_chains=" + str(args.n_chains) + 
+               "_thin=" + str(args.thin) + 
+               "_alpha=" + str(args.alpha) + 
+               "_beta=" + str(args.beta) + 
+               "_k=" + str(args.k) + 
+               "_h.npy"
+)
+output_name_sigma = (args.output_path + 
+               "_n_replications=" + str(args.N_replications) + 
+               "_n_samples=" + str(args.n_samples) + 
+               "_n_burn=" + str(args.n_burn) + 
+               "_n_trees_h=" + str(args.n_trees_h) + 
+               "_n_trees_g=" + str(args.n_trees_g) + 
+               "_n_chains=" + str(args.n_chains) + 
+               "_thin=" + str(args.thin) + 
+               "_alpha=" + str(args.alpha) + 
+               "_beta=" + str(args.beta) + 
+               "_k=" + str(args.k) + 
+               "_sigma.npy"
+)
 # data
 if args.output_path in [
     "experiment_results/B/known/CBARTMM/all_runs",
@@ -148,7 +186,8 @@ if args.output_path in [
     "experiment_results/A/known/vanilla_BART_y_i_star/all_runs_with_ps",
 ]:
     data = sd.make_zaidi_data_A(args.n)
-d    
+    Y,W,X,tau,pi = sd.get_data(data,args.n,1) 
+    
 Y_i_star = sd.get_Y_i_star(Y,W,pi)
 
 if args.model_type == "CBARTMM":
@@ -176,11 +215,30 @@ if args.model_type == "CBARTMM":
                 **kwargs
             )
         )
+    if args.save_g_h_sigma == 0:
+        posterior_samples = np.zeros((int(args.n_samples*args.n_chains*args.thin),args.n,args.N_replications))
+        for i in tqdm(range(args.N_replications)):
+            model[i].fit_CGM(X, Y_i_star, W, pi)
+            posterior_samples[:,:,i]=model[i].get_posterior_CATE()
+    else:
+        sigma = np.zeros((args.n_samples, args.n_chains,args.N_replications))
+        pred_g = np.zeros((args.n, args.n_samples, args.n_chains,args.N_replications))
+        pred_h = np.zeros((args.n, args.n_samples, args.n_chains,args.N_replications))
         
-    posterior_samples = np.zeros((int(args.n_samples*args.n_chains*args.thin),args.n,args.N_replications))
-    for i in tqdm(range(args.N_replications)):
-        model[i].fit_CGM(X, Y_i_star, W, pi)
-        posterior_samples[:,:,i]=model[i].get_posterior_CATE()
+        for i in tqdm(range(args.N_replications)):
+            
+            model[i].fit_CGM(X, Y_i_star, W, pi)
+            
+            sigma_samples = np.array_split(
+                [x.sigma.current_value() for x in model[i].model_samples_cgm], 
+                args.n_chains
+            )
+            
+            for nc in range(args.n_chains):
+                sigma[:,nc,i] = sigma_samples[nc]
+                pred_g[:,:,nc,i] = np.array(model[i].extract[nc]['in_sample_predictions_g']).T 
+                pred_h[:,:,nc,i] = np.array(model[i].extract[nc]['in_sample_predictions_h']).T 
+    
 
 if args.model_type == "CJHM":
     # define model
@@ -284,5 +342,11 @@ if args.model_type == "vanilla_BART_y_i_star":
         posterior_samples[:,:,i]=model[i].get_posterior() 
         
         
-print("models fit successfully")    
-np.save(output_name, posterior_samples)
+print("models fit successfully") 
+if args.save_g_h_sigma == 0:
+    np.save(output_name, posterior_samples)
+else:
+    np.save(output_name_g, pred_g)
+    np.save(output_name_h, pred_h)
+    np.save(output_name_sigma, sigma)
+

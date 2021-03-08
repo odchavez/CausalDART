@@ -165,6 +165,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 self.schedule = SampleScheduleCGM(self.tree_sampler, LeafNodeSampler(), SigmaSampler())
                 self.sampler = ModelSamplerCGM(self.schedule)
                 self.sigma, self.data, self.model, self._prediction_samples, self._model_samples_cgm, self.extract = [None] * 6
+                self.kwargs = kwargs
             
         else:
             self.model_type = 'regression'
@@ -319,7 +320,9 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             alpha=self.alpha,
             beta=self.beta,
             k=self.k,
-            initializer=self.initializer)
+            initializer=self.initializer,
+            **self.kwargs
+        )
         #print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _construct_model_cgm")
         return self.model
     

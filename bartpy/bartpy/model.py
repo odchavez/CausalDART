@@ -136,7 +136,9 @@ class ModelCGM:
                  alpha: float=0.95,
                  beta: float=2.,
                  k: int=2.,
-                 initializer: Initializer=SklearnTreeInitializer()):
+                 initializer: Initializer=SklearnTreeInitializer(),
+                 **kwargs,
+                ):
         #print("enter bartpy/bartpy/model.py ModelCGM __init__")
         #print("**********************************************")
         self.data = deepcopy(data)
@@ -149,7 +151,11 @@ class ModelCGM:
         self._prediction_g = None
         self._prediction_h = None
         self._initializer = initializer
-        #self.n_trees = n_trees
+        if "fix_g" in kwargs:
+            self.fix_g = kwargs["fix_g"]
+        else:
+            self.fix_g = None
+        #self.n_trees = n_trees"
         
         if trees_g is None:
             #print("in if trees_g is None")
@@ -250,7 +256,10 @@ class ModelCGM:
             output = self._out_of_sample_predict_g(X)
             #print("-exit bartpy/bartpy/model.py ModelCGM predict_g")
             return output
-        output = np.sum([tree.predict_g() for tree in self.trees_g], axis=0)
+        if 'self.fix_g' in locals().keys():
+            output = self.fix_g
+        else:
+            output = np.sum([tree.predict_g() for tree in self.trees_g], axis=0)
         #print("-exit bartpy/bartpy/model.py ModelCGM predict_g")
         return output
     
@@ -261,7 +270,10 @@ class ModelCGM:
             output = self._out_of_sample_predict_h(X)
             #print("-exit bartpy/bartpy/model.py ModelCGM predict_h")
             return output
-        output = np.sum([tree.predict_h() for tree in self.trees_h], axis=0)
+        if 'self.fix_h' in locals().keys():
+            output = self.fix_h
+        else:
+            output = np.sum([tree.predict_h() for tree in self.trees_h], axis=0)
         #print("-exit bartpy/bartpy/model.py ModelCGM predict_h")
         return output
 
@@ -271,7 +283,10 @@ class ModelCGM:
         if type(X) == pd.DataFrame:
             X: pd.DataFrame = X
             X = X.values
-        output = np.sum([tree.predict(X) for tree in self.trees_g], axis=0)
+        if 'self.fix_g' in locals().keys():
+            output = self.fix_g
+        else:
+            output = np.sum([tree.predict(X) for tree in self.trees_g], axis=0)
         #print("-exit bartpy/bartpy/model.py ModelCGM _out_of_sample_predict_g")
         return output
     
@@ -281,7 +296,10 @@ class ModelCGM:
         if type(X) == pd.DataFrame:
             X: pd.DataFrame = X
             X = X.values
-        output = np.sum([tree.predict(X) for tree in self.trees_h], axis=0)
+        if 'self.fix_h' in locals().keys():
+            output = self.fix_h
+        else:
+            output = np.sum([tree.predict(X) for tree in self.trees_h], axis=0)
         #print("-exit bartpy/bartpy/model.py ModelCGM _out_of_sample_predict_h")
         return output
 
@@ -299,7 +317,14 @@ class ModelCGM:
 
     def refreshed_trees_g(self) -> Generator[Tree, None, None]: # the internals of the this function will need to be thouroughly checked
         #print("enter bartpy/bartpy/model.py ModelCGM refreshed_trees_g")
-        current_h_of_X = self.predict_h()
+        if 'self.fix_g' in locals().keys():
+            return
+        
+        if 'self.fix_h' in locals().keys():
+            current_h_of_X = self.fix_h
+        else:
+            current_h_of_X = self.predict_h()
+            
         if self._prediction_g is None:
             self._prediction_g = self.predict_g()
         for tree in self._trees_g:
@@ -315,8 +340,14 @@ class ModelCGM:
         
     def refreshed_trees_h(self) -> Generator[Tree, None, None]: # the internals of the this function will need to be thouroughly checked
         #print("enter bartpy/bartpy/model.py ModelCGM refreshed_trees_h")
-        current_g_of_X = self.predict_g()
-        #self.previous_predict_h = self.predict_h()
+        if 'self.fix_h' in locals().keys():
+            return
+        
+        if 'self.fix_g' in locals().keys():
+            current_g_of_X = self.fix_g
+        else:
+            current_g_of_X = self.predict_g()
+
         if self._prediction_h is None:
             self._prediction_h = self.predict_h()
         for tree in self._trees_h:
