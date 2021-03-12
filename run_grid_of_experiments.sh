@@ -5,7 +5,7 @@
 #for ht in {10,30,50,75};#,100,150,200}; #on mac
 for ht in 10 30 50 75#,100,150,200} # on linux
     #do for gt in {30,50,75,100,150,200}; # mac
-    do for gt in 30 50 75 100 150 200 linux
+    do for gt in 30 50 75 100 150 200 #linux
         do 
             echo "G:" $gt " - H:" $ht
         python run_experiment.py --n_samples 25000 --n_burn 1000000 --n_trees_h ${ht} --n_trees_g ${gt}  --n_chains 4 --thin 1 --alpha .95 --beta 2. --k 2. --n 250 --N_replications 1 --output_path "experiment_results/B/known/CBARTMM/all_runs" --save_g_h_sigma 1
