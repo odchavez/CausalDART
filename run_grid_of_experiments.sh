@@ -2,8 +2,8 @@
 
 # loops through the run experiment .py script with various values for number of trees for g and h functions
 
-for gt in {10,30,50,75,100,150,200}; 
-    do for ht in {10,30,50,75,100,150,200}; 
+for ht in {10,30,50,75};#,100,150,200}; 
+    do for gt in {30,50,75,100,150,200}; 
         do 
             echo "G:" $gt " - H:" $ht
         python run_experiment.py --n_samples 25000 --n_burn 1000000 --n_trees_h ${ht} --n_trees_g ${gt}  --n_chains 4 --thin 1 --alpha .95 --beta 2. --k 2. --n 250 --N_replications 1 --output_path "experiment_results/B/known/CBARTMM/all_runs" --save_g_h_sigma 1
