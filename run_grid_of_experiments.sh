@@ -2,15 +2,33 @@
 
 # loops through the run experiment .py script with various values for number of trees for g and h functions
 
-#for ht in {10,30,50,75};#,100,150,200}; #on mac
-for ht in 10 30 50 75#,100,150,200} # on linux
-    #do for gt in {30,50,75,100,150,200}; # mac
-    do for gt in 30 50 75 100 150 200 #linux
+for ht in {250,300}; #on mac
+    do for gt in 300; # mac
         do 
             echo "G:" $gt " - H:" $ht
-        python run_experiment.py --n_samples 25000 --n_burn 1000000 --n_trees_h ${ht} --n_trees_g ${gt}  --n_chains 4 --thin 1 --alpha .95 --beta 2. --k 2. --n 250 --N_replications 1 --output_path "experiment_results/B/known/CBARTMM/all_runs" --save_g_h_sigma 1
+        python run_experiment.py --n_samples 25000 --n_burn 50000 --n_trees_h ${ht} --n_trees_g ${gt}  --n_chains 4 --thin 1 --alpha .95 --beta 2. --k 2. --n 250 --N_replications 1 --output_path "experiment_results/B/known/CBARTMM/all_runs" --save_g_h_sigma 1 --scale_response 0
         done
     done
+    
+#for ht in {10,30,50,75};#,100,150,200}; #on mac
+##for ht in 10 30 50 75#,100,150,200} # on linux
+#    do for gt in {10,30,50,75,100,150,200}; # mac
+#    #do for gt in 30 50 75 100 150 200 #linux
+#        do 
+#            echo "G:" $gt " - H:" $ht
+#        python run_experiment.py --n_samples 25000 --n_burn 100000 --n_trees_h ${ht} --n_trees_g ${gt}  --n_chains 4 --thin 1 --alpha .95 --beta 2. --k 2. --n 250 --N_replications 1 --output_path "experiment_results/B/known/CBARTMM/all_runs" --save_g_h_sigma 1 --scale_response 0
+#        done
+#    done
+
+##for ht in {10,30,50,75};#,100,150,200}; #on mac
+#for ht in 10 30 50 75#,100,150,200} # on linux
+#    #do for gt in {30,50,75,100,150,200}; # mac
+#    do for gt in 30 50 75 100 150 200 #linux
+#        do 
+#            echo "G:" $gt " - H:" $ht
+#        python run_experiment.py --n_samples 25000 --n_burn 1000000 --n_trees_h ${ht} --n_trees_g ${gt}  --n_chains 4 --thin 1 --alpha .95 --beta 2. --k 2. --n 250 --N_replications 1 --output_path "experiment_results/B/known/CBARTMM/all_runs" --save_g_h_sigma 1
+#        done
+#    done
 
 #for ht in {10,20,30};
 #    do for gt in {10,30,50,70,90,110,130,150,170,190}; 

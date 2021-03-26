@@ -136,6 +136,7 @@ class ModelCGM:
                  alpha: float=0.95,
                  beta: float=2.,
                  k: int=2.,
+                 normalize: bool=True,
                  initializer: Initializer=SklearnTreeInitializer(),
                  **kwargs,
                 ):
@@ -145,6 +146,7 @@ class ModelCGM:
         self.alpha = float(alpha)
         self.beta = float(beta)
         self.k = k
+        self.nomalize_response_bool = normalize
         self._sigma = sigma
         self._sigma_h = sigma_h
         self._sigma_g = sigma_g
@@ -375,7 +377,13 @@ class ModelCGM:
     @property
     def sigma_m(self) -> float:
         #print("enter bartpy/bartpy/model.py ModelCGM sigma_m")
-        output = 0.5 / (self.k * np.power(self.n_trees_h, 0.5))
+        if self.nomalize_response_bool:
+            tree_count = np.max([self.n_trees_h, self.n_trees_g])
+            output = 0.5 / (self.k * np.power(tree_count, 0.5))
+        else:
+            y_range = np.max(self.data.y.values)-np.min(self.data.y.values)
+            tree_count = np.max([self.n_trees_h, self.n_trees_g])
+            output = 0.5*y_range / (self.k * np.power(tree_count, 0.5))
         #print("-exit bartpy/bartpy/model.py ModelCGM sigma_m")
         return output
     

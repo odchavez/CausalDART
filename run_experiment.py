@@ -83,6 +83,12 @@ def get_args():
         default=0
     )
     parser.add_argument(
+        '--scale_response', type=int,
+        help='scale response variable to [-.5,.5] if 1 else do not scale',
+        required=False,
+        default=1
+    )
+    parser.add_argument(
         '--output_path', type=str,
         help='output_path',
         required=True
@@ -110,6 +116,7 @@ output_name = (args.output_path +
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
+               "_scale_response=" + str(args.scale_response) +  
                ".npy"
 )
 output_name_g = (args.output_path + 
@@ -123,6 +130,7 @@ output_name_g = (args.output_path +
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
+               "_scale_response=" + str(args.scale_response) +   
                "_g.npy"
 )
 output_name_h = (args.output_path + 
@@ -136,6 +144,7 @@ output_name_h = (args.output_path +
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
+               "_scale_response=" + str(args.scale_response) +  
                "_h.npy"
 )
 output_name_sigma = (args.output_path + 
@@ -149,6 +158,7 @@ output_name_sigma = (args.output_path +
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
+               "_scale_response=" + str(args.scale_response) +  
                "_sigma.npy"
 )
 # data
@@ -212,6 +222,7 @@ if args.model_type == "CBARTMM":
                 n_chains=args.n_chains,
                 n_jobs=-1,
                 store_in_sample_predictions=True,
+                nomalize_response_bool = args.scale_response,
                 **kwargs
             )
         )
