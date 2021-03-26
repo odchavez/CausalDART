@@ -182,6 +182,7 @@ def make_hahn_data(function_type="linear", effect_type="heterogeneous", n_in_stu
     )
     return output
 
+
 def make_zaidi_data_A(n=250):
 
     # data
@@ -242,8 +243,9 @@ def make_zaidi_data_A(n=250):
     Y = W*Y1 + (1-W)*Y0
     Xy = np.concatenate([X_1_15[:,:5],X_36_40],axis=1)
     return {
-        "X":Xy, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
+        "X":X, "Xp":Xp, "Xy":Xy, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
     }
+
 
 def make_zaidi_data_B(n_in_study=250):
     np.random.seed(0)
@@ -277,6 +279,7 @@ def make_zaidi_data_B(n_in_study=250):
         "X":X, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
     }
     
+    
 def get_posterior_samples_data(stem,nreps,nsamp,nburn,ntree,nchain,thin,alpha,beta,k):
     name = (
     stem +
@@ -292,6 +295,7 @@ def get_posterior_samples_data(stem,nreps,nsamp,nburn,ntree,nchain,thin,alpha,be
     )
     return np.load(name)   
     
+    
 def get_posterior_samples_data_2(stem,nreps,nsamp,nburn,ntreeh,ntreeg,nchain,thin,alpha,beta,k):
     name = (
     stem +
@@ -306,4 +310,18 @@ def get_posterior_samples_data_2(stem,nreps,nsamp,nburn,ntreeh,ntreeg,nchain,thi
     "_beta=" + str(beta) + 
     "_k=" + str(k) + ".npy"
     )
-    return np.load(name)   
+    return np.load(name)
+
+
+def CBARTMM_likelihood(resp, W,p,g,h,sigma):
+    n=len(p)
+    denom = W/p + (1-W)/(1-p)
+    delta = g + (W*(1-p) - (1-W)*p)*h
+    LL = -(n*.5)*np.log(2*np.pi)  - n*np.log(sigma) - 0.5*(sigma**2)*np.sum( ((resp-delta)/denom)**2 )
+    return LL
+    
+    
+def BART_normalize_values(y):
+    y_min, y_max = np.min(y), np.max(y)
+    output = -0.5 + ((y - y_min) / (y_max - y_min))
+    return output

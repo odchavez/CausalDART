@@ -293,7 +293,8 @@ class Target(object):
         self._mask = mask
         self._inverse_mask_int = (~self._mask).astype(int)
         self._n_obsv = n_obsv
-
+        self.normalize = normalize
+        
         if y_sum is None:
             self.y_sum_cache_up_to_date = False
             self._summed_y = None
@@ -331,23 +332,32 @@ class Target(object):
     def unnormalize_y(self, y: np.ndarray) -> np.ndarray:
         #print("enter bartpy/bartpy/data.py Target unnormalize_y")
         
-        distance_from_min = y - (-0.5)
-        total_distance = (self.original_y_max - self.original_y_min)
-        output = self.original_y_min + (distance_from_min * total_distance)
+        if self.normalize == True:
+            distance_from_min = y - (-0.5)
+            total_distance = (self.original_y_max - self.original_y_min)
+            output = self.original_y_min + (distance_from_min * total_distance)
+        else:
+            output=y
         #print("-exit bartpy/bartpy/data.py Target unnormalize_y")
         return output
 
     @property
     def unnormalized_y(self) -> np.ndarray:
         #print("enter bartpy/bartpy/data.py Target unnormalized_y")
-        output = self.unnormalize_y(self.values)
+        if self.normalize == True:
+            output = self.unnormalize_y(self.values)
+        else:
+            output = self.values
         #print("-exit bartpy/bartpy/data.py Target unnormalized_y")
         return output
 
     @property
     def normalizing_scale(self) -> float:
         #print("enter bartpy/bartpy/data.py Target normalizing_scale")
-        output = self.original_y_max - self.original_y_min
+        if self.normalize == True: 
+            output = self.original_y_max - self.original_y_min
+        else:
+            output = 1.0
         #print("-exit bartpy/bartpy/data.py Target normalizing_scale")
         return output
 
@@ -377,133 +387,6 @@ class Target(object):
         #print("enter bartpy/bartpy/data.py Target values")
         #print("-exit bartpy/bartpy/data.py Target values")
         return self._y
-
-
-#class TargetCGMg(object):
-#
-#    def __init__(self, y, mask, n_obsv, normalize, y_tilde_g_sum=None, W=None, p=None, h_of_X=None):
-#        #print("enter bartpy/bartpy/data.py TargetCGMg __init__")
-#        #print("y",y)
-#        #print("W=",W)
-#        #print("p=",p)
-#        self._p = p
-#        self._W = W
-#        self._original_y = y
-#        self.original_y_i_star = y*(W-p)/(p*(1-p))
-#        
-#        if h_of_X==None:
-#            self.h_of_X = np.zeros(len(y))
-#        else:
-#            self.h_of_X = h_of_X
-#        
-#        if normalize:
-#            self.original_y_i_star_min = self.original_y_i_star.min()
-#            self.original_y_i_star_max = self.original_y_i_star.max()
-#            self._y_i_star = self.normalize_y_i_star(self.original_y_i_star)
-#        else:
-#            self._y_i_star = self.original_y_i_star
-#        
-#        self._y_tilde_g = self.set_y_tilde_g(h_of_X)
-#        
-#        #print("######################################### TargetCGMg._mask=", mask)
-#        self._mask = mask
-#        self._inverse_mask_int = (~self._mask).astype(int)
-#        self._n_obsv = n_obsv
-#
-#        if y_tilde_g_sum is None:
-#            self.y_tilde_g_sum_cache_up_to_date = False
-#            self._summed_y_tilde_g = None
-#        else:
-#            self.y_tilde_g_sum_cache_up_to_date = True
-#            self._summed_y_tilde_g = y_tilde_g_sum
-#        #print("-exit bartpy/bartpy/data.py TargetCGMg __init__")
-#    
-#    def set_y_tilde_g(self, h_of_X):
-#        output = self._y_i_star - (h_of_X if h_of_X is not None else 0) * (self._W*(1-self._p) - (1-self._W)*self._p)
-#        return output
-#    
-#    @staticmethod
-#    def normalize_y_i_star(y: np.ndarray) -> np.ndarray:
-#        """
-#        Normalize y into the range (-0.5, 0.5)
-#        Useful for allowing the leaf parameter prior to be 0, and to standardize the sigma prior
-#
-#        Parameters
-#        ----------
-#        y - np.ndarray
-#
-#        Returns
-#        -------
-#        np.ndarray
-#
-#        Examples
-#        --------
-#        >>> Data.normalize_y([1, 2, 3])
-#        array([-0.5,  0. ,  0.5])
-#        """
-#        #print("enter bartpy/bartpy/data.py TargetCGMg normalize_y_i_star")
-#        
-#        
-#        y_min, y_max = np.min(y), np.max(y)
-#        output = -0.5 + ((y - y_min) / (y_max - y_min))
-#        #print("-exit bartpy/bartpy/data.py TargetCGMg normalize_y_i_star")
-#        return output
-#
-#    def unnormalize_y_i_star(self, y: np.ndarray) -> np.ndarray:
-#        #print("enter bartpy/bartpy/data.py TargetCGMg unnormalize_y_i_star")
-#        #print("!!!!!!!!!!!!!!!!!!!!!!! Warning - function not yet writen correctly!!!!!!!!!!!!!!!!!!!!!")
-#        distance_from_min = y - (-0.5)
-#        total_distance = (self.original_y_max - self.original_y_min)
-#        output = self.original_y_min + (distance_from_min * total_distance)
-#        #print("-exit bartpy/bartpy/data.py TargetCGMg unnormalize_y_i_star")
-#        return output
-#
-#    @property
-#    def unnormalized_y_i_star(self) -> np.ndarray:
-#        #print("enter bartpy/bartpy/data.py TargetCGMg unnormalized_y_i_star")
-#        output = self.unnormalize_y(self.values)
-#        #print("-exit bartpy/bartpy/data.py TargetCGMg unnormalized_y_i_star")
-#        return output
-#
-#    @property
-#    def normalizing_scale(self) -> float:
-#        #print("enter bartpy/bartpy/data.py TargetCGMg normalizing_scale")
-#        output = self.original_y_max - self.original_y_min
-#        #print("-exit bartpy/bartpy/data.py TargetCGMg normalizing_scale")
-#        return output
-#
-#    def summed_y_tilde_g(self) -> float:
-#        #print("enter bartpy/bartpy/data.py TargetCGMg summed_y")
-#        
-#        if self.y_tilde_g_sum_cache_up_to_date:
-#            #print("-exit bartpy/bartpy/data.py TargetCGMg summed_y")
-#            return self._summed_y_tilde_g
-#        else:
-#            self._summed_y_tilde_g = np.sum(self._y_tilde_g * self._inverse_mask_int) # THIS IS HOW THE MASK IS USED!!!!!
-#            self.y_tilde_g_sum_cache_up_to_date = True
-#            #print("-exit bartpy/bartpy/data.py TargetCGMg summed_y")
-#            return self._summed_y_tilde_g
-#
-#    def update_y_tilde_g(self, y) -> None:
-#        #print("enter bartpy/bartpy/data.py TargetCGMg update_y")
-#        #if y is not None:
-#        #    #print("############################################################# len(y)=", len(y))
-#        #    #print("##################################self.y_tilde_g_sum_cache_up_to_date=", self.y_tilde_g_sum_cache_up_to_date)
-#        self._y_tilde_g = y
-#        self.y_tilde_g_sum_cache_up_to_date = False
-#        #print("-exit bartpy/bartpy/data.py TargetCGMg update_y")
-#              
-#    def update_y_tilde_g_h_function(self, h_of_X: np.ndarray) -> None:
-#        # this function when called will update
-#        self.h_of_X = h_of_X
-#        self._y_tilde_g = self.set_y_tilde_g()
-#        self.y_tilde_g_sum_cache_up_to_date = False
-#
-#    @property
-#    def values(self):
-#        #print("enter bartpy/bartpy/data.py TargetCGMg values")
-#        #print("-exit bartpy/bartpy/data.py TargetCGMg values")
-#        return self._y_tilde_g
 
     
 class PropensityScore(object):

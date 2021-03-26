@@ -105,6 +105,10 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         whether to store acceptance rates of the gibbs samples
         unless you're very memory constrained, you wouldn't want to set this to false
         useful for diagnostics
+    nomalize_response_bool: bool
+        normalize response variable to [-.5,.5] scale if True
+        do not normalize response variable to [-.5,.5] scale if False 
+        and leave response variable unscaled
     tree_sampler: TreeMutationSampler
         Method of sampling used on trees
         defaults to `bartpy.samplers.unconstrainedtree`
@@ -130,6 +134,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  k: float = 2.,
                  store_in_sample_predictions: bool=False,
                  store_acceptance_trace: bool=False,
+                 nomalize_response_bool: bool=True,
                  tree_sampler: TreeMutationSampler=get_tree_sampler(0.5, 0.5),
                  initializer: Optional[Initializer]=None,
                  n_jobs=-1,
@@ -165,6 +170,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 self.schedule = SampleScheduleCGM(self.tree_sampler, LeafNodeSampler(), SigmaSampler())
                 self.sampler = ModelSamplerCGM(self.schedule)
                 self.sigma, self.data, self.model, self._prediction_samples, self._model_samples_cgm, self.extract = [None] * 6
+                self.kwargs = kwargs
+                self.nomalize_response_bool = nomalize_response_bool
             
         else:
             self.model_type = 'regression'
@@ -268,18 +275,24 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         if type(X) == pd.DataFrame:
             X: pd.DataFrame = X
             X = X.values
-        output = Data(deepcopy(X), deepcopy(y), normalize=True)
+        output = Data(deepcopy(X), deepcopy(y), normalize=self.nomalize_response_bool)
         #print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _convert_covariates_to_data")
         return output
     
     @staticmethod
-    def _convert_covariates_to_data_cgm(X: np.ndarray, y: np.ndarray, W:np.ndarray, p: np.ndarray) -> Data:
+    def _convert_covariates_to_data_cgm(X: np.ndarray, y: np.ndarray, W:np.ndarray, p: np.ndarray, nomalize_response_bool=True) -> Data:
         #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _convert_covariates_to_data_cgm")
         from copy import deepcopy
         if type(X) == pd.DataFrame:
             X: pd.DataFrame = X
             X = X.values
-        output = Data(deepcopy(X), deepcopy(y), W=deepcopy(W), p=deepcopy(p) , normalize=True)
+        output = Data(
+            deepcopy(X), 
+            deepcopy(y), 
+            W=deepcopy(W), 
+            p=deepcopy(p) , 
+            normalize=nomalize_response_bool
+        )
         #print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _convert_covariates_to_data_cgm")
         return output
 
@@ -302,7 +315,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _construct_model_cgm")
         if len(X) == 0 or X.shape[1] == 0:
             raise ValueError("Empty covariate matrix passed")
-        self.data = self._convert_covariates_to_data_cgm(X, y, W, p)
+        self.data = self._convert_covariates_to_data_cgm(X, y, W, p, self.nomalize_response_bool)
         #self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
         self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
         self.sigma_h = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
@@ -319,7 +332,10 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             alpha=self.alpha,
             beta=self.beta,
             k=self.k,
-            initializer=self.initializer)
+            normalize = self.nomalize_response_bool,
+            initializer=self.initializer,
+            **self.kwargs
+        )
         #print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _construct_model_cgm")
         return self.model
     
@@ -421,7 +437,10 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
         #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel predict")
         if X is None and self.store_in_sample_predictions:
-            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_g, axis=0))
+            if self.nomalize_response_bool:
+                output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_g, axis=0))
+            else:
+                output = np.mean(self._prediction_samples_g, axis=0)
             #print("exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
             return output
         elif X is None and not self.store_in_sample_predictions:
@@ -452,7 +471,10 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
         #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel predict")
         if X is None and self.store_in_sample_predictions:
-            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_g, axis=0))
+            if self.nomalize_response_bool:
+                output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_g, axis=0))
+            else:
+                output = np.mean(self._prediction_samples_g, axis=0)
             #print("exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
             return output
         elif X is None and not self.store_in_sample_predictions:
@@ -483,7 +505,10 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
         #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel predict")
         if X is None and self.store_in_sample_predictions:
-            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_h, axis=0))
+            if self.nomalize_response_bool: 
+                output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_h, axis=0))
+            else: 
+                output = np.mean(self._prediction_samples_h, axis=0)
             #print("exit bartpy/bartpy/sklearnmodel.py SklearnModel predict")
             return output
         elif X is None and not self.store_in_sample_predictions:
@@ -513,7 +538,10 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
         #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel residuals")
         if y is None:
-            output = self.model.data.y.unnormalized_y - self.predict(X)
+            if self.nomalize_response_bool:
+                output = self.model.data.y.unnormalized_y - self.predict(X)
+            else:
+                 self.model.data.y.values - self.predict(X)
             #print("exit bartpy/bartpy/sklearnmodel.py SklearnModel residuals")
             return output
         else:
@@ -565,19 +593,31 @@ class SklearnModel(BaseEstimator, RegressorMixin):
 
     def _out_of_sample_predict(self, X):
         #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict")
-        output = self.data.y.unnormalize_y(np.mean([x.predict(X) for x in self._model_samples], axis=0))
+        if self.nomalize_response_bool:
+            output = self.data.y.unnormalize_y(
+                np.mean([x.predict(X) for x in self._model_samples], axis=0))
+        else:
+            output = np.mean([x.predict(X) for x in self._model_samples], axis=0)
         #print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict")
         return output
     
     def _out_of_sample_predict_cate(self, X):
         #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_cate")
-        output = self.data.y.unnormalize_y(np.mean([x.predict_g(X) for x in self._model_samples_cgm], axis=0))
+        if self.nomalize_response_bool:
+            output = self.data.y.unnormalize_y(
+                np.mean([x.predict_g(X) for x in self._model_samples_cgm], axis=0))
+        else:
+            output = np.mean([x.predict_g(X) for x in self._model_samples_cgm], axis=0)
         #print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_cate")
         return output
     
     def _out_of_sample_predict_response(self, X):
         #print("enter bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_response")
-        output = self.data.y.unnormalize_y(np.mean([x.predict_h(X) for x in self._model_samples_cgm], axis=0))
+        if self.nomalize_response_bool:
+            output = self.data.y.unnormalize_y(
+                np.mean([x.predict_h(X) for x in self._model_samples_cgm], axis=0))
+        else:
+            output = np.mean([x.predict_h(X) for x in self._model_samples_cgm], axis=0)
         #print("-exit bartpy/bartpy/sklearnmodel.py SklearnModel _out_of_sample_predict_response")
         return output
 
@@ -722,7 +762,10 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
 
         if self.store_in_sample_predictions:
-            output = self.data.y.unnormalize_y( self._prediction_samples_g )
+            if self.nomalize_response_bool:
+                output = self.data.y.unnormalize_y( self._prediction_samples_g )
+            else:
+                output = self._prediction_samples_g
             return output
         else:
             raise ValueError(
@@ -748,7 +791,10 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
 
         if self.store_in_sample_predictions:
-            output = self.data.y.unnormalize_y( self._prediction_samples )
+            if self.nomalize_response_bool:
+                output = self.data.y.unnormalize_y( self._prediction_samples )
+            else:
+                output = self._prediction_samples
             return output
         else:
             raise ValueError(
