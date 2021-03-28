@@ -2,11 +2,11 @@
 
 # loops through the run experiment .py script with various values for number of trees for g and h functions
 
-for ht in {250,300}; #on mac
-    do for gt in 300; # mac
+for ht in {75,100,150,200,250}; #on mac
+    do for gt in {75,100,150,200,250}; # mac
         do 
             echo "G:" $gt " - H:" $ht
-        python run_experiment.py --n_samples 25000 --n_burn 50000 --n_trees_h ${ht} --n_trees_g ${gt}  --n_chains 4 --thin 1 --alpha .95 --beta 2. --k 2. --n 250 --N_replications 1 --output_path "experiment_results/B/known/CBARTMM/all_runs" --save_g_h_sigma 1 --scale_response 0
+        python run_experiment.py --n_samples 2000 --n_burn 25000 --n_trees_h ${ht} --n_trees_g ${gt}  --n_chains 4 --thin 1 --alpha .95 --beta 2. --k 2. --n 250 --N_replications 1 --output_path "experiment_results/A/known/CBARTMM/all_runs" --save_g_h_sigma 1 --scale_response 0
         done
     done
     

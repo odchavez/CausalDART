@@ -407,7 +407,16 @@ class ModelCGM:
             tree_count = self.n_trees_h
             output = 0.5 / (self.k * np.power(tree_count, 0.5))
         else:
-            y_range = np.max(self.data.y.values)-np.min(self.data.y.values)
+            y=self.data.y.values
+            p=self.data.p.values
+            W=self.data.W.values
+            y_obs = y * p * (1-p) / (W-p)
+            y1_over_p= (y_obs/p)*W
+            y0_over_1mp= (y_obs/(1.-p))*(1-W)
+            
+            max_val = np.max(np.max(y1_over_p), np.max(y0_over_1mp))
+            min_val = np.min(np.min(y1_over_p), np.min(y0_over_1mp))
+            y_range = max_val-min_val
             #print(y_range)
             tree_count = self.n_trees_h
             output = 0.5*y_range / (self.k * np.power(tree_count, 0.5))
@@ -420,14 +429,20 @@ class ModelCGM:
         if self.nomalize_response_bool:
             output = 0.
         else:
-            y1_over_p= (self.data.y.values/self.data.p.values)*self.data.W.values
-            y0_over_p= (self.data.y.values/(1.-self.data.p.values))*(1-self.data.W.values)
-            y1_over_p=y1_over_p[y1_over_p>0]
-            y0_over_p=y0_over_p[y0_over_p>0]
+            y=self.data.y.values
+            p=self.data.p.values
+            W=self.data.W.values
+            y_obs = y * p * (1-p) / (W-p)
+            y1_over_p= (y_obs/p)*W
+            y0_over_1mp= (y_obs/(1.-p))*(1-W)
+            y1_over_p=y1_over_p[y1_over_p!=0]
+            y0_over_1mp=y0_over_1mp[y0_over_1mp!=0]
+            #print("np.mean(y1_over_p)=",np.mean(y1_over_p))
+            #print("np.mean(y0_over_p)=",np.mean(y0_over_1mp))
             mean_y1_p=np.mean(y1_over_p)
-            mean_y0_p=np.mean(y0_over_p)
+            mean_y0_1mp=np.mean(y0_over_1mp)
             tree_count = self.n_trees_h
-            output = (mean_y1_p + mean_y0_p) / tree_count
+            output = (mean_y1_p + mean_y0_1mp) / tree_count
         #print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
         return output
 
@@ -438,7 +453,7 @@ class ModelCGM:
             output = 0.
         else:
             y_bar = np.mean(self.data.y.values)
-            tree_count = self.n_trees_h
+            tree_count = self.n_trees_g
             output = y_bar / tree_count
         #print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
         return output
@@ -462,8 +477,8 @@ def deep_copy_model_cgm(model: ModelCGM) -> ModelCGM:
     copied_model = ModelCGM(
         None, 
         deepcopy(model.sigma), 
-        deepcopy(model.sigma_h), 
-        deepcopy(model.sigma_g), 
+        #deepcopy(model.sigma_h), 
+        #deepcopy(model.sigma_g), 
         [deep_copy_tree(tree) for tree in model.trees_g],
         [deep_copy_tree(tree) for tree in model.trees_h],
     )
