@@ -414,8 +414,8 @@ class ModelCGM:
             y1_over_p= (y_obs/p)*W
             y0_over_1mp= (y_obs/(1.-p))*(1-W)
             
-            max_val = np.max(np.max(y1_over_p), np.max(y0_over_1mp))
-            min_val = np.min(np.min(y1_over_p), np.min(y0_over_1mp))
+            max_val = np.max([np.max(y1_over_p), np.max(y0_over_1mp)])
+            min_val = np.min([np.min(y1_over_p), np.min(y0_over_1mp)])
             y_range = max_val-min_val
             #print(y_range)
             tree_count = self.n_trees_h
