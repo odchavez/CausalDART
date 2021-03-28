@@ -374,30 +374,74 @@ class ModelCGM:
     #    #print("-exit bartpy/bartpy/model.py ModelCGM sigma_g_m")
     #    return output
 
-    @property
-    def sigma_m(self) -> float:
-        #print("enter bartpy/bartpy/model.py ModelCGM sigma_m")
-        if self.nomalize_response_bool:
-            tree_count = np.max([self.n_trees_h, self.n_trees_g])
-            output = 0.5 / (self.k * np.power(tree_count, 0.5))
-        else:
-            y_range = np.max(self.data.y.values)-np.min(self.data.y.values)
-            tree_count = np.max([self.n_trees_h, self.n_trees_g])
-            output = 0.5*y_range / (self.k * np.power(tree_count, 0.5))
-        #print("-exit bartpy/bartpy/model.py ModelCGM sigma_m")
-        return output
+    #@property
+    #def sigma_m(self) -> float:
+    #    #print("enter bartpy/bartpy/model.py ModelCGM sigma_m")
+    #    if self.nomalize_response_bool:
+    #        tree_count = np.max([self.n_trees_h, self.n_trees_g])
+    #        output = 0.5 / (self.k * np.power(tree_count, 0.5))
+    #    else:
+    #        y_range = np.max(self.data.y.values)-np.min(self.data.y.values)
+    #        tree_count = np.max([self.n_trees_h, self.n_trees_g])
+    #        output = 0.5*y_range / (self.k * np.power(tree_count, 0.5))
+    #    #print("-exit bartpy/bartpy/model.py ModelCGM sigma_m")
+    #    return output
     
     @property
     def sigma_g(self) -> Sigma:
         #print("enter bartpy/bartpy/model.py ModelCGM sigma_g")
+        if self.nomalize_response_bool:
+            tree_count = self.n_trees_g
+            output = 0.5 / (self.k * np.power(tree_count, 0.5))
+        else:
+            y_range = np.max(self.data.y.values)-np.min(self.data.y.values)
+            tree_count = self.n_trees_g
+            output = 0.5*y_range / (self.k * np.power(tree_count, 0.5))
         #print("-exit bartpy/bartpy/model.py ModelCGM sigma_g")
-        return self._sigma_g
+        return output
  
     @property
     def sigma_h(self) -> Sigma:
         #print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
+        if self.nomalize_response_bool:
+            tree_count = self.n_trees_h
+            output = 0.5 / (self.k * np.power(tree_count, 0.5))
+        else:
+            y_range = np.max(self.data.y.values)-np.min(self.data.y.values)
+            #print(y_range)
+            tree_count = self.n_trees_h
+            output = 0.5*y_range / (self.k * np.power(tree_count, 0.5))
         #print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
-        return self._sigma_h
+        return output
+    
+    @property
+    def mu_h(self) -> Sigma:
+        #print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
+        if self.nomalize_response_bool:
+            output = 0.
+        else:
+            y1_over_p= (self.data.y.values/self.data.p.values)*self.data.W.values
+            y0_over_p= (self.data.y.values/(1.-self.data.p.values))*(1-self.data.W.values)
+            y1_over_p=y1_over_p[y1_over_p>0]
+            y0_over_p=y0_over_p[y0_over_p>0]
+            mean_y1_p=np.mean(y1_over_p)
+            mean_y0_p=np.mean(y0_over_p)
+            tree_count = self.n_trees_h
+            output = (mean_y1_p + mean_y0_p) / tree_count
+        #print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
+        return output
+
+    @property
+    def mu_g(self) -> Sigma:
+        #print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
+        if self.nomalize_response_bool:
+            output = 0.
+        else:
+            y_bar = np.mean(self.data.y.values)
+            tree_count = self.n_trees_h
+            output = y_bar / tree_count
+        #print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
+        return output
     
     @property
     def sigma(self) -> Sigma:

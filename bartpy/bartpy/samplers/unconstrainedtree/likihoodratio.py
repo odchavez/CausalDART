@@ -35,30 +35,6 @@ def log_grow_ratio(combined_node: LeafNode, left_node: LeafNode, right_node: Lea
     return output
 
 
-def log_grow_ratio_cgm_g_(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float):
-
-    var = np.power(sigma.current_value(), 2)
-    var_mu = np.power(sigma_mu, 2)
-    n = combined_node.data.X.n_obsv
-    n_l = left_node.data.X.n_obsv
-    n_r = right_node.data.X.n_obsv
-
-    first_term = (var * (var + n * sigma_mu)) / ((var + n_l * var_mu) * (var + n_r * var_mu))
-    first_term = np.log(np.sqrt(first_term))
-
-    combined_y_sum = combined_node.data.y.summed_y()
-    left_y_sum = left_node.data.y.summed_y()
-    right_y_sum = right_node.data.y.summed_y()
-
-    left_resp_contribution = np.square(left_y_sum) / (var + n_l * sigma_mu)
-    right_resp_contribution = np.square(right_y_sum) / (var + n_r * sigma_mu)
-    combined_resp_contribution = np.square(combined_y_sum) / (var + n * sigma_mu)
-
-    resp_contribution = left_resp_contribution + right_resp_contribution - combined_resp_contribution
-    output = first_term + ((var_mu / (2 * var)) * resp_contribution)
-
-    return output
-
 def log_grow_ratio_cgm_g(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float):
     
     var = np.power(sigma.current_value(), 2)
@@ -95,6 +71,7 @@ def log_grow_ratio_cgm_g(combined_node: LeafNode, left_node: LeafNode, right_nod
     output = first_term + resp_contribution
 
     return output
+
 
 def log_grow_ratio_cgm_h(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float):
     
@@ -234,7 +211,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.existing_node, 
             proposal.updated_node.left_child, 
             proposal.updated_node.right_child,
-            model.sigma, model.sigma_m)
+            model.sigma, model.sigma_g)
 
         return output
 
@@ -245,7 +222,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.existing_node, 
             proposal.updated_node.left_child, 
             proposal.updated_node.right_child, 
-            model.sigma, model.sigma_m)
+            model.sigma, model.sigma_h)
 
         return output
     
@@ -267,7 +244,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.updated_node, 
             proposal.existing_node.left_child, 
             proposal.existing_node.right_child, 
-            model.sigma, model.sigma_m)
+            model.sigma, model.sigma_g)
 
         return output
 
@@ -278,7 +255,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.updated_node, 
             proposal.existing_node.left_child, 
             proposal.existing_node.right_child, 
-            model.sigma, model.sigma_m)
+            model.sigma, model.sigma_h)
 
         return output
 

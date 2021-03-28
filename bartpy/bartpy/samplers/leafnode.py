@@ -56,7 +56,8 @@ class LeafNodeSampler(Sampler):
     def sample_cgm_g(self, model: ModelCGM, node: LeafNode) -> float:
         #print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_g")
 
-        prior_var = model.sigma_m ** 2
+        prior_var = model.sigma_g ** 2
+        prior_mean = model.mu_g
         W = node.data.W.values # needs to apply mask
         p = node.data.p.values # needs to apply mask
         sigma_g_i = (W/p + (1-W)/(1-p))*model.sigma.current_value()
@@ -72,8 +73,7 @@ class LeafNodeSampler(Sampler):
         post_mean_numerator = np.sum( 
             (~node.data.mask).astype(int) * (node.data.y.values*one_over_sigma_g_i_sqrd)
         )
-        posterior_mean = post_mean_numerator * posterior_variance
-
+        posterior_mean = posterior_variance*(post_mean_numerator + prior_mean/prior_var)
         output = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees_g, 0.5))
         #print("-exit bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_g")
         return output
@@ -81,7 +81,8 @@ class LeafNodeSampler(Sampler):
     def sample_cgm_h(self, model: ModelCGM, node: LeafNode) -> float:
         #print("enter bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_h")
 
-        prior_var = model.sigma_m ** 2
+        prior_var = model.sigma_h ** 2
+        prior_mean = model.mu_h
         W = node.data.W.values # needs to apply mask
         p = node.data.p.values # needs to apply mask
         sigma_h_i = (1./(p*(1-p)))*model.sigma.current_value()
@@ -90,7 +91,7 @@ class LeafNodeSampler(Sampler):
         posterior_variance = 1./( (1/prior_var) + np.sum(((~node.data.mask).astype(int))*(one_over_sigma_h_i_sqrd)))
         
         post_mean_numerator = np.sum((~node.data.mask).astype(int)*(node.data.y.values*one_over_sigma_h_i_sqrd))
-        posterior_mean = post_mean_numerator*posterior_variance
+        posterior_mean = posterior_variance*(post_mean_numerator + prior_mean/prior_var)
 
         output = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees_h, 0.5))
         #print("-exit bartpy/bartpy/samplers/leafnode.py LeafNodeSampler sample_cgm_h")

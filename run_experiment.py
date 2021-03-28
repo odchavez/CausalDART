@@ -179,6 +179,7 @@ if args.output_path in [
 ]:
     data = sd.make_zaidi_data_A(args.n)
     Y,W,X,tau,pi = sd.get_data(data,0)
+    X = data["Xy"]
     
 if args.output_path in [
     "experiment_results/B/known/CBARTMM/all_runs_with_ps",
@@ -357,7 +358,12 @@ print("models fit successfully")
 if args.save_g_h_sigma == 0:
     np.save(output_name, posterior_samples)
 else:
+    print("saving g trees...")
     np.save(output_name_g, pred_g)
+
+    print("saving h trees...")
     np.save(output_name_h, pred_h)
+    
+    print("saving sigma parameters...")
     np.save(output_name_sigma, sigma)
 

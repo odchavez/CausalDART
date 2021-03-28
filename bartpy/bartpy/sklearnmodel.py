@@ -134,7 +134,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  k: float = 2.,
                  store_in_sample_predictions: bool=False,
                  store_acceptance_trace: bool=False,
-                 nomalize_response_bool: bool=True,
+                 nomalize_response_bool: bool=False,
                  tree_sampler: TreeMutationSampler=get_tree_sampler(0.5, 0.5),
                  initializer: Optional[Initializer]=None,
                  n_jobs=-1,
