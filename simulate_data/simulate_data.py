@@ -241,7 +241,7 @@ def make_zaidi_data_A(n=250):
     tau = Y1-Y0
     
     Y = W*Y1 + (1-W)*Y0
-    Xy = np.concatenate([X_1_15[:,:5],X_36_40],axis=1)
+    Xy = np.concatenate([X_1_15[:,:5], X_16_30[:,0:4], X_16_30[:,-1:], X_31_35[:,0:3], X_36_40],axis=1)
     return {
         "X":X, "Xp":Xp, "Xy":Xy, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
     }
