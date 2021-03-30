@@ -125,8 +125,10 @@ class ModelCGM:
     def __init__(self,
                  data: Optional[Data],
                  sigma: Sigma,
-                 sigma_h: Sigma,
-                 sigma_g: Sigma,
+                 #sigma_h: Sigma,
+                 #sigma_g: Sigma,
+                 mu_g=None,
+                 mu_h=None,
                  #trees: Optional[List[Tree]]=None,
                  trees_g: Optional[List[Tree]]=None,
                  trees_h: Optional[List[Tree]]=None,
@@ -148,8 +150,10 @@ class ModelCGM:
         self.k = k
         self.nomalize_response_bool = normalize
         self._sigma = sigma
-        self._sigma_h = sigma_h
-        self._sigma_g = sigma_g
+        #self._sigma_h = sigma_h
+        #self._sigma_g = sigma_g
+        self._mu_g=mu_g
+        self._mu_h=mu_h
         self._prediction_g = None
         self._prediction_h = None
         self._initializer = initializer
@@ -428,7 +432,7 @@ class ModelCGM:
         #print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
         if self.nomalize_response_bool:
             output = 0.
-        else:
+        elif self._mu_h is None:
             y=self.data.y.values
             p=self.data.p.values
             W=self.data.W.values
@@ -441,9 +445,11 @@ class ModelCGM:
             #print("np.mean(y0_over_p)=",np.mean(y0_over_1mp))
             mean_y1_p=np.mean(y1_over_p)
             mean_y0_1mp=np.mean(y0_over_1mp)
-            tree_count = self.n_trees_h
-            output = (mean_y1_p + mean_y0_1mp) / tree_count
+            output = (mean_y1_p + mean_y0_1mp) / self.n_trees_h
+        else:
+            output = self._mu_h/self.n_trees_h
         #print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
+        #print("mu_h=",output)
         return output
 
     @property
@@ -451,11 +457,13 @@ class ModelCGM:
         #print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
         if self.nomalize_response_bool:
             output = 0.
-        else:
+        elif self._mu_g is None:
             y_bar = np.mean(self.data.y.values)
-            tree_count = self.n_trees_g
-            output = y_bar / tree_count
+            output = y_bar / self.n_trees_g
+        else:
+            output = self._mu_g/self.n_trees_g
         #print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
+        #print("mu_g=",output)
         return output
     
     @property
@@ -477,8 +485,8 @@ def deep_copy_model_cgm(model: ModelCGM) -> ModelCGM:
     copied_model = ModelCGM(
         None, 
         deepcopy(model.sigma), 
-        #deepcopy(model.sigma_h), 
-        #deepcopy(model.sigma_g), 
+        deepcopy(model.sigma_h), 
+        deepcopy(model.sigma_g), 
         [deep_copy_tree(tree) for tree in model.trees_g],
         [deep_copy_tree(tree) for tree in model.trees_h],
     )

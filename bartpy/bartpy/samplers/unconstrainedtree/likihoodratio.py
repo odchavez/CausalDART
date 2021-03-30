@@ -35,7 +35,7 @@ def log_grow_ratio(combined_node: LeafNode, left_node: LeafNode, right_node: Lea
     return output
 
 
-def log_grow_ratio_cgm_g(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float):
+def log_grow_ratio_cgm_g(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float, mu_g: float):
     
     var = np.power(sigma.current_value(), 2)
     var_mu = np.power(sigma_mu, 2)
@@ -58,22 +58,22 @@ def log_grow_ratio_cgm_g(combined_node: LeafNode, left_node: LeafNode, right_nod
     y_tilde_g_i = combined_node.data.y.values
     y_tilde_g_i_over_var_i = y_tilde_g_i/sigma_g_i_sqr
     
-    A_left_left_sum = (1/A_left)*np.sum( (~left_node.data.mask).astype(int) * y_tilde_g_i_over_var_i)**2
-    A_right_right_sum = (1/A_right)*np.sum((~right_node.data.mask).astype(int) * y_tilde_g_i_over_var_i)**2
-    A_combined_combined_sum = (1/A_combined)*np.sum((~combined_node.data.mask).astype(int) * y_tilde_g_i_over_var_i)**2
+    A_left_left_sum = (1/A_left)*np.sum( (~left_node.data.mask).astype(int) * y_tilde_g_i_over_var_i + mu_g/var_mu)**2
+    A_right_right_sum = (1/A_right)*np.sum((~right_node.data.mask).astype(int) * y_tilde_g_i_over_var_i + mu_g/var_mu)**2
+    A_combined_combined_sum = (1/A_combined)*np.sum((~combined_node.data.mask).astype(int) * y_tilde_g_i_over_var_i + mu_g/var_mu)**2
     
     left_resp_contribution = 0.5 *  A_left_left_sum
     right_resp_contribution = 0.5 *  A_right_right_sum
     combined_resp_contribution = 0.5 *  A_combined_combined_sum
     
-    resp_contribution = left_resp_contribution + right_resp_contribution - combined_resp_contribution
+    resp_contribution = -.5*(mu_g**2)/var_mu + left_resp_contribution + right_resp_contribution - combined_resp_contribution
 
     output = first_term + resp_contribution
 
     return output
 
 
-def log_grow_ratio_cgm_h(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float):
+def log_grow_ratio_cgm_h(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float, mu_h: float):
     
     var = np.power(sigma.current_value(), 2)
     var_mu = np.power(sigma_mu, 2)
@@ -96,15 +96,15 @@ def log_grow_ratio_cgm_h(combined_node: LeafNode, left_node: LeafNode, right_nod
     y_tilde_h_i = combined_node.data.y.values
     y_tilde_h_i_over_var_i = y_tilde_h_i/sigma_h_i_sqr
     
-    A_left_left_sum = (1/A_left)*np.sum( (~left_node.data.mask).astype(int) * y_tilde_h_i_over_var_i)**2
-    A_right_right_sum = (1/A_right)*np.sum((~right_node.data.mask).astype(int) * y_tilde_h_i_over_var_i)**2
-    A_combined_combined_sum = (1/A_combined)*np.sum((~combined_node.data.mask).astype(int) * y_tilde_h_i_over_var_i)**2
+    A_left_left_sum = (1/A_left)*np.sum( (~left_node.data.mask).astype(int) * y_tilde_h_i_over_var_i + mu_h/var_mu)**2
+    A_right_right_sum = (1/A_right)*np.sum((~right_node.data.mask).astype(int) * y_tilde_h_i_over_var_i + mu_h/var_mu)**2
+    A_combined_combined_sum = (1/A_combined)*np.sum((~combined_node.data.mask).astype(int) * y_tilde_h_i_over_var_i + mu_h/var_mu)**2
     
     left_resp_contribution = 0.5 *  A_left_left_sum
     right_resp_contribution = 0.5 *  A_right_right_sum
     combined_resp_contribution = 0.5 *  A_combined_combined_sum
     
-    resp_contribution = left_resp_contribution + right_resp_contribution - combined_resp_contribution
+    resp_contribution = -.5*(mu_h**2)/var_mu +  left_resp_contribution + right_resp_contribution - combined_resp_contribution
 
     output = first_term + resp_contribution
 
@@ -211,7 +211,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.existing_node, 
             proposal.updated_node.left_child, 
             proposal.updated_node.right_child,
-            model.sigma, model.sigma_g)
+            model.sigma, model.sigma_g, model.mu_g)
 
         return output
 
@@ -222,7 +222,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.existing_node, 
             proposal.updated_node.left_child, 
             proposal.updated_node.right_child, 
-            model.sigma, model.sigma_h)
+            model.sigma, model.sigma_h, model.mu_h)
 
         return output
     
@@ -244,7 +244,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.updated_node, 
             proposal.existing_node.left_child, 
             proposal.existing_node.right_child, 
-            model.sigma, model.sigma_g)
+            model.sigma, model.sigma_g, model.mu_g)
 
         return output
 
@@ -255,7 +255,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             proposal.updated_node, 
             proposal.existing_node.left_child, 
             proposal.existing_node.right_child, 
-            model.sigma, model.sigma_h)
+            model.sigma, model.sigma_h, model.mu_h)
 
         return output
 

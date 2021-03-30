@@ -132,6 +132,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  alpha: float = 0.95,
                  beta: float = 2.,
                  k: float = 2.,
+                 mu_g=None,
+                 mu_h=None,
                  store_in_sample_predictions: bool=False,
                  store_acceptance_trace: bool=False,
                  nomalize_response_bool: bool=False,
@@ -158,6 +160,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 self.alpha = alpha
                 self.beta = beta
                 self.k = k
+                self.mu_g=mu_g
+                self.mu_h=mu_h
                 self.thin = thin
                 self.n_jobs = n_jobs
                 self.store_in_sample_predictions = store_in_sample_predictions
@@ -326,6 +330,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             sigma=self.sigma,
             sigma_h=self.sigma_h,
             sigma_g=self.sigma_g,
+            mu_g=self.mu_g,
+            mu_h=self.mu_h,
             #n_trees=self.n_trees,
             n_trees_g=self.n_trees_g,
             n_trees_h=self.n_trees_h,
