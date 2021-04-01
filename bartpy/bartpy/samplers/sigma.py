@@ -50,6 +50,8 @@ class SigmaSampler(Sampler):
         paw = model.data.p.values
         posterior_alpha = sigma.alpha + (model.data.X.n_obsv / 2.)
         posterior_beta = sigma.beta + (0.5 * (np.sum(paw*np.square(model.residuals()))))
+        #print("posterior_alpha=",posterior_alpha)
+        #print("posterior_beta=",posterior_beta)
         draw = np.power(np.random.gamma(posterior_alpha, 1./posterior_beta), -0.5)
         #print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm")
         return draw

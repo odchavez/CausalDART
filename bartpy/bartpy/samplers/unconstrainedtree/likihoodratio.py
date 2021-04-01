@@ -58,9 +58,15 @@ def log_grow_ratio_cgm_g(combined_node: LeafNode, left_node: LeafNode, right_nod
     y_tilde_g_i = combined_node.data.y.values
     y_tilde_g_i_over_var_i = y_tilde_g_i/sigma_g_i_sqr
     
-    A_left_left_sum = (1/A_left)*np.sum( (~left_node.data.mask).astype(int) * y_tilde_g_i_over_var_i + mu_g/var_mu)**2
-    A_right_right_sum = (1/A_right)*np.sum((~right_node.data.mask).astype(int) * y_tilde_g_i_over_var_i + mu_g/var_mu)**2
-    A_combined_combined_sum = (1/A_combined)*np.sum((~combined_node.data.mask).astype(int) * y_tilde_g_i_over_var_i + mu_g/var_mu)**2
+    A_left_left_sum = (1/A_left)*(
+        np.sum((~left_node.data.mask).astype(int) * y_tilde_g_i_over_var_i ) + mu_g/var_mu
+    )**2
+    A_right_right_sum = (1/A_right)*(
+        np.sum((~right_node.data.mask).astype(int) * y_tilde_g_i_over_var_i ) + mu_g/var_mu
+    )**2
+    A_combined_combined_sum = (1/A_combined)*(
+        np.sum((~combined_node.data.mask).astype(int) * y_tilde_g_i_over_var_i) + mu_g/var_mu
+    )**2
     
     left_resp_contribution = 0.5 *  A_left_left_sum
     right_resp_contribution = 0.5 *  A_right_right_sum
@@ -96,9 +102,15 @@ def log_grow_ratio_cgm_h(combined_node: LeafNode, left_node: LeafNode, right_nod
     y_tilde_h_i = combined_node.data.y.values
     y_tilde_h_i_over_var_i = y_tilde_h_i/sigma_h_i_sqr
     
-    A_left_left_sum = (1/A_left)*np.sum( (~left_node.data.mask).astype(int) * y_tilde_h_i_over_var_i + mu_h/var_mu)**2
-    A_right_right_sum = (1/A_right)*np.sum((~right_node.data.mask).astype(int) * y_tilde_h_i_over_var_i + mu_h/var_mu)**2
-    A_combined_combined_sum = (1/A_combined)*np.sum((~combined_node.data.mask).astype(int) * y_tilde_h_i_over_var_i + mu_h/var_mu)**2
+    A_left_left_sum = (1/A_left)*(
+        np.sum( (~left_node.data.mask).astype(int) * y_tilde_h_i_over_var_i) + mu_h/var_mu
+    )**2
+    A_right_right_sum = (1/A_right)*(
+        np.sum((~right_node.data.mask).astype(int) * y_tilde_h_i_over_var_i) + mu_h/var_mu
+    )**2
+    A_combined_combined_sum = (1/A_combined)*(
+        np.sum((~combined_node.data.mask).astype(int) * y_tilde_h_i_over_var_i) + mu_h/var_mu
+    )**2
     
     left_resp_contribution = 0.5 *  A_left_left_sum
     right_resp_contribution = 0.5 *  A_right_right_sum

@@ -483,12 +483,12 @@ def deep_copy_model(model: Model) -> Model:
 def deep_copy_model_cgm(model: ModelCGM) -> ModelCGM:
     #print("enter bartpy/bartpy/model.py deep_copy_model_cgm")
     copied_model = ModelCGM(
-        None, 
-        deepcopy(model.sigma), 
-        deepcopy(model.sigma_h), 
-        deepcopy(model.sigma_g), 
-        [deep_copy_tree(tree) for tree in model.trees_g],
-        [deep_copy_tree(tree) for tree in model.trees_h],
+        data=None, 
+        sigma=deepcopy(model.sigma), 
+        #deepcopy(model.sigma_h), 
+        #deepcopy(model.sigma_g), 
+        trees_g=[deep_copy_tree(tree) for tree in model.trees_g],
+        trees_h=[deep_copy_tree(tree) for tree in model.trees_h],
     )
     #print("-exit bartpy/bartpy/model.py deep_copy_model_cgm")
     return copied_model

@@ -192,13 +192,14 @@ def make_zaidi_data_A(n=250):
     X_16_30 = np.random.uniform(low=0,high=1, size=(250,15))
     p_k = expit(X_1_15[:,:5] - X_16_30[:,:5])
     X_31_35 = np.random.binomial(n=1, p=p_k)
-    X_36_40 = 5 + 0.75 * X_1_15[:,:5] * (X_16_30[:,:5] - X_31_35)
+    lambda_k = 5 + 0.75 * X_1_15[:,:5] * (X_16_30[:,:5] + X_31_35)
+    X_36_40 = np.random.poisson(lam=lambda_k)
     X=np.concatenate([X_1_15, X_16_30, X_31_35, X_36_40], axis=1)
     
     # propensity scores
     true_pi = expit(
         .3*np.sum(X_1_15[:,:5], axis=1) - 
-        .5*np.sum(X_16_30[:,5:10], axis=1) - 
+        .5*np.sum(X_16_30[:,6:11], axis=1) - 
         .0001 * (np.sum(X_16_30[:,-5:], axis=1) + np.sum(X_31_35, axis=1)) +
         .055 * np.sum(X_36_40, axis=1)
     )
@@ -226,7 +227,7 @@ def make_zaidi_data_A(n=250):
     )
     f_of_X = term/(1+term)
     
-    Y0 = 0.15 * np.sum(X_1_15[:,:5], axis=1) + 1.5 * np.exp( 1 + f_of_X ) + error
+    Y0 = 0.15 * np.sum(X_1_15[:,:5], axis=1) + 1.5 * np.exp( 1 + 1.5*f_of_X ) + error
     Y1 = (
         np.sum(
             2.15*X_1_15[:,:5] + 
@@ -251,8 +252,8 @@ def make_zaidi_data_B(n_in_study=250):
     np.random.seed(0)
 
     def h(x):
-        # g(1) = 2, g(2) = −1 and g(3) = −4
-        return -2*x+5
+        # g(0) = 2, g(1) = −1 and g(2) = −4
+        return -3*x+2
     
     # the data
     X_1_3 = np.random.normal(loc=0, scale=1, size=(n_in_study, 3))

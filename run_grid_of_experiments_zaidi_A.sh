@@ -6,7 +6,7 @@ for ht in 150; #on mac
     do for gt in 150; # mac
         do 
             echo "G:" $gt " - H:" $ht
-        python run_experiment.py --n_samples 5000 --n_burn 100000 --n_trees_h ${ht} --n_trees_g ${gt}  --n_chains 4 --thin 1 --alpha .95 --beta 2. --k 2. --n 250 --N_replications 1 --output_path "experiment_results/B/known/CBARTMM/all_runs" --save_g_h_sigma 1 --scale_response 0
+        python run_experiment.py --n_samples 5000 --n_burn 100000 --n_trees_h ${ht} --n_trees_g ${gt}  --n_chains 4 --thin 1 --alpha .95 --beta 2. --k 2. --n 250 --N_replications 1 --output_path "experiment_results/A/known/CBARTMM/all_runs" --save_g_h_sigma 1 --scale_response 0
         done
     done
     

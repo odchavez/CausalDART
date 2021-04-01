@@ -179,7 +179,6 @@ if args.output_path in [
 ]:
     data = sd.make_zaidi_data_A(args.n)
     Y,W,X,tau,pi = sd.get_data(data,0)
-    X = data["Xy"]
     
 if args.output_path in [
     "experiment_results/B/known/CBARTMM/all_runs_with_ps",
