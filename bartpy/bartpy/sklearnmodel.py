@@ -134,6 +134,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  k: float = 2.,
                  mu_g=None,
                  mu_h=None,
+                 data_prior: int=-1,
                  store_in_sample_predictions: bool=False,
                  store_acceptance_trace: bool=False,
                  nomalize_response_bool: bool=False,
@@ -162,6 +163,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 self.k = k
                 self.mu_g=mu_g
                 self.mu_h=mu_h
+                self.data_prior=data_prior
+                print("in sklearnmodel - self.data_prior=",self.data_prior)
                 self.thin = thin
                 self.n_jobs = n_jobs
                 self.store_in_sample_predictions = store_in_sample_predictions
@@ -321,18 +324,19 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             raise ValueError("Empty covariate matrix passed")
         self.data = self._convert_covariates_to_data_cgm(X, y, W, p, self.nomalize_response_bool)
         #self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
-        print(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+        #print(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
         self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
-        self.sigma_h = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
-        self.sigma_g = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+        #self.sigma_h = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+        #self.sigma_g = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
 
         self.model = ModelCGM(
             data=self.data,
             sigma=self.sigma,
-            sigma_h=self.sigma_h,
-            sigma_g=self.sigma_g,
-            mu_g=self.mu_g,
-            mu_h=self.mu_h,
+            #sigma_h=self.sigma_h,
+            #sigma_g=self.sigma_g,
+            #mu_g=self.mu_g,
+            #mu_h=self.mu_h,
+            data_prior=self.data_prior,
             #n_trees=self.n_trees,
             n_trees_g=self.n_trees_g,
             n_trees_h=self.n_trees_h,

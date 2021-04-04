@@ -316,9 +316,10 @@ def get_posterior_samples_data_2(stem,nreps,nsamp,nburn,ntreeh,ntreeg,nchain,thi
 
 def CBARTMM_likelihood(resp, W,p,g,h,sigma):
     n=len(p)
-    denom = W/p + (1-W)/(1-p)
-    delta = g + (W*(1-p) - (1-W)*p)*h
-    LL = -(n*.5)*np.log(2*np.pi)  - n*np.log(sigma) - 0.5*(sigma**2)*np.sum( ((resp-delta)/denom)**2 )
+    i_factor = W/p + (1-W)/(1-p)
+    mu_i = g + (W*(1-p) - (1-W)*p)*h
+    sigma_i = sigma*i_factor
+    LL = -(n*.5)*np.log(2*np.pi)  - np.sum(np.log(sigma_i)) - 0.5*np.sum( ( (resp-mu_i)/sigma_i)**2 )
     return LL
     
     

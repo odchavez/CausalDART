@@ -129,6 +129,7 @@ class ModelCGM:
                  #sigma_g: Sigma,
                  mu_g=None,
                  mu_h=None,
+                 data_prior=None,
                  #trees: Optional[List[Tree]]=None,
                  trees_g: Optional[List[Tree]]=None,
                  trees_h: Optional[List[Tree]]=None,
@@ -138,7 +139,7 @@ class ModelCGM:
                  alpha: float=0.95,
                  beta: float=2.,
                  k: int=2.,
-                 normalize: bool=True,
+                 normalize=None,
                  initializer: Initializer=SklearnTreeInitializer(),
                  **kwargs,
                 ):
@@ -154,6 +155,9 @@ class ModelCGM:
         #self._sigma_g = sigma_g
         self._mu_g=mu_g
         self._mu_h=mu_h
+        self.data_prior = data_prior
+        #print("in ModelCGM - data_prior=",data_prior)
+        #print("in ModelCGM - self.data_prior=",self.data_prior)
         self._prediction_g = None
         self._prediction_h = None
         self._initializer = initializer
@@ -187,7 +191,8 @@ class ModelCGM:
             self.n_trees_h = len(trees_h)
             self._trees_h = trees_h
         
-        ##print("self._trees_g=",self._trees_g)
+        #print("in ModelCGM - self.data_prior=",self.data_prior)
+        #print("in ModelCGM - self.nomalize_response_bool=",self.nomalize_response_bool)
         ##print("self._trees_h=",self._trees_h)
         ##print("type(self._trees_g)=",type(self._trees_g))
         ##print("type(self._trees_h)=",type(self._trees_h))
@@ -407,10 +412,13 @@ class ModelCGM:
     @property
     def sigma_h(self) -> Sigma:
         #print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
+        #print("self.nomalize_response_bool=",self.nomalize_response_bool)
         if self.nomalize_response_bool:
+            #print("if self.nomalize_response_bool:")
             tree_count = self.n_trees_h
             output = 0.5 / (self.k * np.power(tree_count, 0.5))
         else:
+            #print("else self.nomalize_response_bool:")
             y=self.data.y.values
             p=self.data.p.values
             W=self.data.W.values
@@ -429,10 +437,12 @@ class ModelCGM:
     
     @property
     def mu_h(self) -> Sigma:
-        #print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
+        #print("enter bartpy/bartpy/model.py ModelCGM mu_h")
         if self.nomalize_response_bool:
             output = 0.
-        elif self._mu_h is None:
+        elif self.data_prior == 0:
+            output = 0.
+        elif self.data_prior == 1:
             y=self.data.y.values
             p=self.data.p.values
             W=self.data.W.values
@@ -441,29 +451,30 @@ class ModelCGM:
             y0_over_1mp= (y_obs/(1.-p))*(1-W)
             y1_over_p=y1_over_p[y1_over_p!=0]
             y0_over_1mp=y0_over_1mp[y0_over_1mp!=0]
-            #print("np.mean(y1_over_p)=",np.mean(y1_over_p))
-            #print("np.mean(y0_over_p)=",np.mean(y0_over_1mp))
             mean_y1_p=np.mean(y1_over_p)
             mean_y0_1mp=np.mean(y0_over_1mp)
             output = (mean_y1_p + mean_y0_1mp) / self.n_trees_h
-        else:
-            output = self._mu_h/self.n_trees_h
-        #print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
         #print("mu_h=",output)
+        #print("-exit bartpy/bartpy/model.py ModelCGM mu_h")
         return output
 
     @property
     def mu_g(self) -> Sigma:
-        #print("enter bartpy/bartpy/model.py ModelCGM sigma_h")
+        #print("enter bartpy/bartpy/model.py ModelCGM mu_g")
+        #print("self.nomalize_response_bool=", self.nomalize_response_bool)
+        #print("self.data_prior=", self.data_prior)
         if self.nomalize_response_bool:
             output = 0.
-        elif self._mu_g is None:
+        elif self.data_prior == 0:
+            output = 0.
+        elif self.data_prior == 1:
             y_bar = np.mean(self.data.y.values)
             output = y_bar / self.n_trees_g
-        else:
-            output = self._mu_g/self.n_trees_g
-        #print("-exit bartpy/bartpy/model.py ModelCGM sigma_h")
+        #else:
+        #    output = self._mu_g/self.n_trees_g
         #print("mu_g=",output)
+        #print("-exit bartpy/bartpy/model.py ModelCGM mu_g")
+        
         return output
     
     @property
