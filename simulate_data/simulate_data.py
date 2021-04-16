@@ -120,10 +120,10 @@ def make_basic_linear_data(p, N, y_0_1_noise_scale=0.0001, log_odds_noise_scale=
     return basic_linear_data, lm_true_beta_propensity_scores, lm_true_beta_response, predictor_columns
 
 
-def make_hahn_data(function_type="linear", effect_type="heterogeneous", n_in_study=500):
+def make_hahn_data(function_type="linear", effect_type="heterogeneous", n_in_study=500, seed=0):
 # Five variables comprise x; the first three are continuous, drawn as standard normal random variables, the fourth is a dichotomous variable and the fifth is unordered categorical, taking three levels (denoted 1, 2, 3).
     
-    np.random.seed(0)
+    np.random.seed(seed)
     
     def g(x):
         # g(1) = 2, g(2) = −1 and g(3) = −4
@@ -160,33 +160,30 @@ def make_hahn_data(function_type="linear", effect_type="heterogeneous", n_in_stu
 
     output=pd.DataFrame(
         {
-            "x_0":1,
-            "x_1":x_1,
-            "x_2":x_2,
-            "x_3":x_3,
-            "x_4":x_4,
-            "x_5":x_5,
-            "w_i":w_i,
-            "mu":mu,
-            "Tau":Tau,
-            "pi":pi,
-            "x_1_x_3":x_1*x_3,
-            "x_2_x_5":x_2*x_5,
-            "x_4_1": dummies.x_4_1, "x_4_2": dummies.x_4_2, "x_4_3": dummies.x_4_3,
-            "P(T=1)":pi,
-            "T":w_i,
-            "Y0_given_X": mu,
-            "Y1_given_X": mu+Tau,
-            "Y_obs":mu+Tau*w_i,
+            "X0":1,
+            "X1":x_1,
+            "X2":x_2,
+            "X3":x_3,
+            "X4":x_4,
+            "X5":x_5,
+            "W":w_i,
+            "tau":Tau,
+            "p":pi,
+            "X1_X3":x_1*x_3,
+            "X2_X5":x_2*x_5,
+            "X4_1": dummies.x_4_1, "X4_2": dummies.x_4_2, "X4_3": dummies.x_4_3,
+            "Y0": mu,
+            "Y1": mu+Tau,
+            "Y":mu+Tau*w_i,
         }
     )
     return output
 
 
-def make_zaidi_data_A(n=250):
+def make_zaidi_data_A(n=250, seed=0, variance=0.0001):
 
     # data
-    np.random.seed(0)
+    np.random.seed(seed)
 
     X_1_15  = np.random.normal(loc=0, scale=1, size=(250,15))
     X_16_30 = np.random.uniform(low=0,high=1, size=(250,15))
@@ -217,7 +214,7 @@ def make_zaidi_data_A(n=250):
     W = np.random.binomial(n=1, p=true_pi)
     
     # potential outcomes
-    error = np.random.normal(0, np.sqrt(0.0001), size=n)
+    error = np.random.normal(0, np.sqrt(variance), size=n)
     
     term = (
         X_16_30[:,0] * np.exp(np.reshape(X_16_30[:,-1:], n)) + 
@@ -248,8 +245,8 @@ def make_zaidi_data_A(n=250):
     }
 
 
-def make_zaidi_data_B(n_in_study=250):
-    np.random.seed(0)
+def make_zaidi_data_B(n_in_study=250, seed=0, variance=0.0001):
+    np.random.seed(seed)
 
     def h(x):
         # g(0) = 2, g(1) = −1 and g(2) = −4
@@ -266,7 +263,7 @@ def make_zaidi_data_B(n_in_study=250):
     
     # outcomes
     f_of_X = -6 + h(X_5) + np.absolute(X_1_3[:,2] - 1)
-    error = np.random.normal(loc=0, scale=np.sqrt(0.0001), size = n_in_study)
+    error = np.random.normal(loc=0, scale=np.sqrt(variance), size = n_in_study)
     Y0 = f_of_X - 15*X_1_3[:,2] + error
     Y1 = f_of_X + (1 + 2*X_1_3[:,1]*X_1_3[:,2]) + error
     

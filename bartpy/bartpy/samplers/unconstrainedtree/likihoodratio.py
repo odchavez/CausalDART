@@ -53,7 +53,7 @@ def log_grow_ratio_cgm_g(combined_node: LeafNode, left_node: LeafNode, right_nod
     A_right = 1/var_mu + sum_sigma_g_i_sqr_right
     A_combined = 1/var_mu + sum_sigma_g_i_sqr_combined
 
-    first_term = .5 * (-np.log(var_mu) + np.log(A_combined) - np.log(A_left) - np.log(A_right))
+    first_term = .5 * (np.log(var_mu) + np.log(A_combined) - np.log(A_left) - np.log(A_right))
     
     y_tilde_g_i = combined_node.data.y.values
     y_tilde_g_i_over_var_i = y_tilde_g_i/sigma_g_i_sqr
@@ -103,7 +103,7 @@ def log_grow_ratio_cgm_h(combined_node: LeafNode, left_node: LeafNode, right_nod
     A_right = 1/var_mu + sum_sigma_h_i_sqr_right
     A_combined = 1/var_mu + sum_sigma_h_i_sqr_combined
 
-    first_term = .5 * (-np.log(var_mu) + np.log(A_combined) - np.log(A_left) - np.log(A_right))
+    first_term = .5 * (np.log(var_mu) + np.log(A_combined) - np.log(A_left) - np.log(A_right))
     
     y_tilde_h_i = combined_node.data.y.values
     y_tilde_h_i_over_var_i = y_tilde_h_i/sigma_h_i_sqr
