@@ -102,6 +102,12 @@ def get_args():
         help='List of comma separated column names WITHOUT white space characters used for predictors for X.',
         required=True
     )
+    parser.add_argument(
+        '--true_propensity', type=int,
+        help='if 1 use True propensity score.  if 0 use estimated propensity score p_hat',
+        required=False,
+        default=1
+    )
     return parser.parse_args()
 
 
@@ -173,7 +179,10 @@ preds = args.predictors.split(',')
 X=np.array(data[preds])
 Y=np.array(data["Y"])
 W=np.array(data["W"])
-p=np.array(data["p"])
+if args.true_propensity == 1:
+    p=np.array(data["p"])
+else:
+    p=np.array(data["p_hat"])
 
 # define model
 kwargs = {
