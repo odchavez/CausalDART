@@ -108,6 +108,18 @@ def get_args():
         required=False,
         default=1
     )
+    parser.add_argument(
+        '--fix_h', type=int,
+        help='if 1 use true fixed value of h.  if 0 estimate h from data',
+        required=False,
+        default=0
+    )
+    parser.add_argument(
+        '--fix_g', type=int,
+        help='if 1 use true fixed value of g.  if 0 estimate g from data',
+        required=False,
+        default=0
+    )
     return parser.parse_args()
 
 
@@ -184,6 +196,15 @@ if args.true_propensity == 1:
 else:
     p=np.array(data["p_hat"])
 
+if args.fix_h == 1:
+    fix_h = data["Y1"]/p + data["Y0"]/(1-p)
+else:
+    fix_h=None
+    
+if args.fix_g == 1:
+    fix_g = data["tau"]
+else:
+    fix_g=None
 # define model
 kwargs = {
     "model": "causal_gaussian_mixture"
@@ -205,7 +226,9 @@ for i in range(args.N_replications):
             n_jobs=-1,
             store_in_sample_predictions=True,
             nomalize_response_bool = False,
-            **kwargs
+            **kwargs,
+            fix_g=fix_g,
+            fix_h=fix_h,
         )
     )
 if args.save_g_h_sigma == 0:

@@ -101,6 +101,8 @@ class ModelCGM:
                  sigma_g=None,
                  mu_g=None,
                  mu_h=None,
+                 fix_g=None,
+                 fix_h=None,
                  trees_g: Optional[List[Tree]]=None,
                  trees_h: Optional[List[Tree]]=None,
                  n_trees_g: int=50,
@@ -126,6 +128,9 @@ class ModelCGM:
         self._prediction_g = None
         self._prediction_h = None
         self._initializer = initializer
+        self.kwargs=kwargs
+        self.fix_g = fix_g
+        self.fix_h = fix_h 
         
         if trees_g is None:
             self.n_trees_g = n_trees_g
@@ -144,7 +149,11 @@ class ModelCGM:
         else:
             self.n_trees_h = len(trees_h)
             self._trees_h = trees_h
-
+        
+        #print("self._mu_g=",self._mu_g)
+        #print("self.fix_g =", fix_g )
+        #print("self.fix_h =", fix_h )
+        
     def initialize_trees_g(self) -> List[Tree]:
         trees = [Tree([LeafNode(Split(deepcopy(self.data)))]) for _ in range(self.n_trees_g)]
         for tree in trees:
@@ -187,11 +196,14 @@ class ModelCGM:
 
     def unnormalized_residuals(self) -> np.ndarray:
         #print("enter bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
-        output = self.data.y.unnormalized_y - self.data.y.unnormalize_y(self.predict())
+        print("unnormalized_residuals() called ********************************************")
+        #output = self.data.y.unnormalized_y - self.data.y.unnormalize_y(self.predict())
         #print("-exit bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
-        return output
+        #return output
+        pass
 
     def predict(self, X: np.ndarray=None) -> np.ndarray:
+        print("predict() called ********************************************")
         if X is not None:
             output = self._out_of_sample_predict_g(X)
             return output
@@ -200,23 +212,51 @@ class ModelCGM:
     
     def predict_g(self, X: np.ndarray=None) -> np.ndarray:
         if X is not None:
-            output = self._out_of_sample_predict_g(X)
+            #print("stage 1")
+            if self.fix_g is None:
+                #print("using trees for predict_g")
+                output = self._out_of_sample_predict_g(X)
+            else:
+                #print("using fix_g for predict")
+                output = self.fix_g
             return output
-        output = np.sum([tree.predict_g() for tree in self.trees_g], axis=0)
+        
+        if self.fix_g is None:
+            #print("stage 2")
+            #print("using trees for predict_g")
+            output = np.sum([tree.predict_g() for tree in self.trees_g], axis=0)
+        else:
+            #print("using fix_g for predict")
+            output = self.fix_g
+
         return output
     
     def predict_h(self, X: np.ndarray=None) -> np.ndarray:
         if X is not None:
-            output = self._out_of_sample_predict_h(X)
+            if self.fix_h is None:
+                #print("using trees for predict_h")
+                output = self._out_of_sample_predict_h(X)
+            else:
+                #print("using fix_h predict_h")
+                output=self.fix_h
             return output
-        output = np.sum([tree.predict_h() for tree in self.trees_h], axis=0)
+        if self.fix_h is None:
+            #print("using trees for predict_h")
+            output = np.sum([tree.predict_h() for tree in self.trees_h], axis=0)
+        else:
+            #print("using fix_h for predict_h")
+            output=self.fix_h
         return output
 
     def _out_of_sample_predict_g(self, X: np.ndarray) -> np.ndarray:
         if type(X) == pd.DataFrame:
             X: pd.DataFrame = X
             X = X.values
-        output = np.sum([tree.predict(X) for tree in self.trees_g], axis=0)
+        if self.fix_g is not None:
+            output = self.fix_g
+        else:
+            output = np.sum([tree.predict(X) for tree in self.trees_g], axis=0)
+            
         return output
     
     def _out_of_sample_predict_h(self, X: np.ndarray) -> np.ndarray:
@@ -235,7 +275,15 @@ class ModelCGM:
         return self._trees_h
 
     def refreshed_trees_g(self) -> Generator[Tree, None, None]:
-        current_h_of_X = self.predict_h()
+        
+        if self.fix_g is not None:
+            return
+        
+        if self.fix_h is not None:
+            current_h_of_X = self.fix_h
+        else:
+            current_h_of_X = self.predict_h()
+        
         if self._prediction_g is None:
             self._prediction_g = self.predict_g()
         for tree in self._trees_g:
@@ -248,7 +296,15 @@ class ModelCGM:
             self._prediction_g += tree.predict_g()
         
     def refreshed_trees_h(self) -> Generator[Tree, None, None]:
-        current_g_of_X = self.predict_g()
+        
+        if self.fix_h is not None:
+            return
+        
+        if self.fix_g is not None:
+            current_g_of_X = self.fix_g
+        else:
+            current_g_of_X = self.predict_g()
+        
         if self._prediction_h is None:
             self._prediction_h = self.predict_h()
         for tree in self._trees_h:
@@ -294,5 +350,9 @@ def deep_copy_model_cgm(model: ModelCGM) -> ModelCGM:
         sigma=deepcopy(model.sigma), 
         trees_g=[deep_copy_tree(tree) for tree in model.trees_g],
         trees_h=[deep_copy_tree(tree) for tree in model.trees_h],
+        mu_g=model._mu_g,
+        mu_h=model._mu_h,
+        fix_g=model.fix_g,
+        fix_h=model.fix_h
     )
     return copied_model

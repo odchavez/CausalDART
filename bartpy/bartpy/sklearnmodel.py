@@ -118,8 +118,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  n_chains: int = 4,
                  sigma_a: float = 0.001,
                  sigma_b: float = 0.001,
-                 n_samples: int = 200,
-                 n_burn: int = 200,
+                 n_samples: int = 2000,
+                 n_burn: int = 2000,
                  thin: float = 0.1,
                  alpha: float = 0.95,
                  beta: float = 2.,
@@ -130,6 +130,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  tree_sampler: TreeMutationSampler=get_tree_sampler(0.5, 0.5),
                  initializer: Optional[Initializer]=None,
                  n_jobs=-1,
+                 fix_g=None,
+                 fix_h=None,
                  **kwargs
                 ):
         
@@ -161,6 +163,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 self.sigma, self.data, self.model, self._prediction_samples, self._model_samples_cgm, self.extract = [None] * 6
                 self.kwargs = kwargs
                 self.nomalize_response_bool = nomalize_response_bool
+                self.fix_g=fix_g
+                self.fix_h=fix_h
             
         else:
             self.model_type = 'regression'
@@ -184,6 +188,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             self.schedule = SampleSchedule(self.tree_sampler, LeafNodeSampler(), SigmaSampler())
             self.sampler = ModelSampler(self.schedule)
             self.sigma, self.data, self.model, self._prediction_samples, self._model_samples, self.extract = [None] * 6
+            self.nomalize_response_bool = True
         
         
     def fit(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray) -> 'SklearnModel':
@@ -256,7 +261,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         if type(X) == pd.DataFrame:
             X: pd.DataFrame = X
             X = X.values
-        output = Data(deepcopy(X), deepcopy(y), normalize=self.nomalize_response_bool)
+        output = Data(deepcopy(X), deepcopy(y), normalize=True)
         return output
     
     @staticmethod
@@ -331,6 +336,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             sigma_g=self.sigma_g,
             mu_g=self.mu_g,
             mu_h=self.mu_h,
+            fix_g=self.fix_g,
+            fix_h=self.fix_h,
             n_trees_g=self.n_trees_g,
             n_trees_h=self.n_trees_h,
             alpha=self.alpha,
@@ -413,36 +420,58 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         output = [delayed_run_chain_cgm() for _ in range(self.n_chains)]
         return output
 
+    #def predict(self, X: np.ndarray=None) -> np.ndarray: formerly modified but now original version has been returned
+    #    """
+    #    Predict the target corresponding to the provided covariate matrix
+    #    If X is None, will predict based on training covariates
+#
+    #    Prediction is based on the mean of all samples
+#
+    #    Parameters
+    #    ----------
+    #    X: pd.DataFrame
+    #        covariates to predict from
+#
+    #    Returns
+    #    -------
+    #    np.ndarray
+    #        predictions for the X covariates
+    #    """
+    #    if X is None and self.store_in_sample_predictions:
+    #        if self.nomalize_response_bool:
+    #            output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_g, axis=0))
+    #        else:
+    #            output = np.mean(self._prediction_samples_g, axis=0)
+    #        return output
+    #    elif X is None and not self.store_in_sample_predictions:
+    #        
+    #        raise ValueError(
+    #            "In sample predictions only possible if model.store_in_sample_predictions is `True`.  Either set the parameter to True or pass a non-None X parameter")
+    #    else:
+    #        output = self._out_of_sample_predict(X)
+    #        return output
+
     def predict(self, X: np.ndarray=None) -> np.ndarray:
         """
         Predict the target corresponding to the provided covariate matrix
         If X is None, will predict based on training covariates
-
         Prediction is based on the mean of all samples
-
         Parameters
         ----------
         X: pd.DataFrame
             covariates to predict from
-
         Returns
         -------
         np.ndarray
             predictions for the X covariates
         """
         if X is None and self.store_in_sample_predictions:
-            if self.nomalize_response_bool:
-                output = self.data.y.unnormalize_y(np.mean(self._prediction_samples_g, axis=0))
-            else:
-                output = np.mean(self._prediction_samples_g, axis=0)
-            return output
+            return self.data.y.unnormalize_y(np.mean(self._prediction_samples, axis=0))
         elif X is None and not self.store_in_sample_predictions:
-            
             raise ValueError(
                 "In sample predictions only possible if model.store_in_sample_predictions is `True`.  Either set the parameter to True or pass a non-None X parameter")
         else:
-            output = self._out_of_sample_predict(X)
-            return output
+            return self._out_of_sample_predict(X)
         
     def predict_CATE(self, X: np.ndarray=None) -> np.ndarray:
         """
