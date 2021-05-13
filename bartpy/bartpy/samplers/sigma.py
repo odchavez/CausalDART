@@ -47,7 +47,7 @@ class SigmaSampler(Sampler):
     @staticmethod
     def sample_cgm(model: ModelCGM, sigma: Sigma) -> float:
         #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm")
-        paw = model.data.p.values
+        paw = model.data.W.values*(model.data.p.values**2) + (1-model.data.W.values)*((1-model.data.p.values)**2)
         posterior_alpha = sigma.alpha + (model.data.X.n_obsv / 2.)
         posterior_beta = sigma.beta + (0.5 * (np.sum(paw*np.square(model.residuals()))))
         #print("posterior_alpha=",posterior_alpha)

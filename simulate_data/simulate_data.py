@@ -214,7 +214,8 @@ def make_zaidi_data_A(n=250, seed=0, variance=0.0001):
     W = np.random.binomial(n=1, p=true_pi)
     
     # potential outcomes
-    error = np.random.normal(0, np.sqrt(variance), size=n)
+    error_0 = np.random.normal(0, np.sqrt(variance), size=n)
+    error_1 = np.random.normal(0, np.sqrt(variance), size=n)
     
     term = (
         X_16_30[:,0] * np.exp(np.reshape(X_16_30[:,-1:], n)) + 
@@ -223,25 +224,28 @@ def make_zaidi_data_A(n=250, seed=0, variance=0.0001):
         X_16_30[:,3] * np.exp(np.reshape(X_31_35[:,2], n)) 
     )
     f_of_X = term/(1+term)
-    
-    Y0 = 0.15 * np.sum(X_1_15[:,:5], axis=1) + 1.5 * np.exp( 1 + 1.5*f_of_X ) + error
-    Y1 = (
+
+    f0=0.15 * np.sum(X_1_15[:,:5], axis=1) + 1.5 * np.exp( 1 + 1.5*f_of_X )
+    f1=(
         np.sum(
             2.15*X_1_15[:,:5] + 
             2.75*X_1_15[:,:5]*X_1_15[:,:5] + 
             10 * X_1_15[:,:5]*X_1_15[:,:5]*X_1_15[:,:5],
             axis=1
         ) + 
-        1.25*np.sqrt(.5 + 1.5*np.sum(X_36_40, axis=1)) + 
-        error
+        1.25*np.sqrt(.5 + 1.5*np.sum(X_36_40, axis=1))
     )
     
-    tau = Y1-Y0
+    Y0 = f0 + error_0
+    Y1 = f1 + error_1
+    
+    tau = f1-f0
+    h = f1/true_pi  + f0/(1-true_pi)
     
     Y = W*Y1 + (1-W)*Y0
     Xy = np.concatenate([X_1_15[:,:5], X_16_30[:,0:4], X_16_30[:,-1:], X_31_35[:,0:3], X_36_40],axis=1)
     return {
-        "X":X, "Xp":Xp, "Xy":Xy, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
+        "X":X, "Xp":Xp, "Xy":Xy, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0, "h(x)":h
     }
 
 
@@ -263,18 +267,24 @@ def make_zaidi_data_B(n_in_study=250, seed=0, variance=0.0001):
     
     # outcomes
     f_of_X = -6 + h(X_5) + np.absolute(X_1_3[:,2] - 1)
-    error = np.random.normal(loc=0, scale=np.sqrt(variance), size = n_in_study)
-    Y0 = f_of_X - 15*X_1_3[:,2] + error
-    Y1 = f_of_X + (1 + 2*X_1_3[:,1]*X_1_3[:,2]) + error
+    error_0 = np.random.normal(loc=0, scale=np.sqrt(variance), size = n_in_study)
+    error_1 = np.random.normal(loc=0, scale=np.sqrt(variance), size = n_in_study)
     
-    tau = Y1 - Y0
+    f0 = f_of_X - 15*X_1_3[:,2]
+    f1 = f_of_X + (1 + 2*X_1_3[:,1]*X_1_3[:,2])
+    
+    Y0 = f0 + error_0
+    Y1 = f1 + error_1
+    
+    tau = f1 - f0
+    h = f1/true_pi  + f0/(1-true_pi)
     
     Y = W*Y1 + (1-W)*Y0
     
     X=np.concatenate([X_1_3, X_4.reshape((n_in_study,1)), X_5.reshape((n_in_study,1))], axis=1)
     
     return {
-        "X":X, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
+        "X":X, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0, "h(x)":h,
     }
     
     

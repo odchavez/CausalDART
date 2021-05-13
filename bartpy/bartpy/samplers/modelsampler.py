@@ -130,6 +130,7 @@ class ModelSamplerCGM(Sampler):
                     in_sample_log_h = trace_logger["In Sample Prediction"](model.predict_h())
                     if in_sample_log_g is not None:
                         trace.append(in_sample_log_g)
+                    if in_sample_log_h is not None:
                         trace_h.append(in_sample_log_h)
                 if store_acceptance:
                     acceptance_trace.append(step_trace_dict)

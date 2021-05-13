@@ -141,7 +141,7 @@ class Tree:
         Generate a set of predictions with the same dimensionality as the target array
         Note that the prediction is from one tree, so represents only (1 / number_of_trees) of the target
         """
-        #print("enter bartpy/bartpy/tree.py Tree")
+        #print("enter bartpy/bartpy/tree.py Tree predict")
         
         if X is not None:
             output = self._out_of_sample_predict(X)
@@ -156,7 +156,7 @@ class Tree:
                 self._prediction = np.zeros(self.nodes[0].data.X.n_obsv)
             self._prediction[leaf.split.condition()] = leaf.predict()
         self.cache_up_to_date = True
-        #print("-exit bartpy/bartpy/tree.py Tree")
+        #print("-exit bartpy/bartpy/tree.py Tree predict")
         return self._prediction
 
     def predict_g(self, X: np.ndarray=None) -> np.ndarray:

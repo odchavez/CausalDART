@@ -116,8 +116,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  n_trees_h: int = 200,
                  n_trees_g: int = 200,
                  n_chains: int = 4,
-                 sigma_a: float = 0.001,
-                 sigma_b: float = 0.001,
+                 sigma_a: float = 5, #0.001, # should be automatically set by the data
+                 sigma_b: float = 0.001, # should be automatically set by the data
                  n_samples: int = 2000,
                  n_burn: int = 2000,
                  thin: float = 0.1,
@@ -297,8 +297,6 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         if len(X) == 0 or X.shape[1] == 0:
             raise ValueError("Empty covariate matrix passed")
         self.data = self._convert_covariates_to_data_cgm(X, y, W, p, self.nomalize_response_bool)
-
-        self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
         
         # prior on g leafnodes
         y_bar = np.mean(y)
@@ -328,7 +326,27 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         y_range = max_val-min_val
         tree_count = self.n_trees_h
         self.sigma_h = 0.5*y_range / (self.k * np.power(tree_count, 0.5))
-            
+        
+        # prior parameters on sigma
+        s_hat = np.std(y_obs)
+        if s_hat >= 1.:
+            qval=.1*s_hat
+            b = 1
+            while qval < s_hat:
+                b*=1.5
+                gamma_sample = np.power(np.random.gamma(self.sigma_a, 1/b, size=1000), -0.5)
+                qval = np.quantile(gamma_sample, q=[0.9])
+        else:
+            qval=2*s_hat
+            b = 3
+            while qval > s_hat:
+                b/=1.10
+                gamma_sample = np.power(np.random.gamma(self.sigma_a, 1/b, size=1000), -0.5)
+                qval = np.quantile(gamma_sample, q=[0.9])
+    
+        self.sigma_b = b    
+        self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
+        
         self.model = ModelCGM(
             data=self.data,
             sigma=self.sigma,

@@ -173,60 +173,60 @@ class ModelCGM:
         p=self.data.p.values
         #paw = W*p**2 + (1-W)*(1-p)**2
         pbw = W*(1-p) - p*(1-W)
-        ##print("Computing Residuals with self.data.y.values=", self.data.y.values)
+        #print("Computing Residuals with self.data.y.values=", self.data.y.values[:10])
         ##print("mean self.data.y.values=", np.mean(self.data.y.values))
         ##print("var self.data.y.values=", np.var(self.data.y.values))
         output = self.data.y.values - self.predict_g() - pbw*self.predict_h()
         #print("-exit bartpy/bartpy/model.py ModelCGM residuals")
         return output
 
-    def residuals_g(self) -> np.ndarray:
-        #print("enter bartpy/bartpy/model.py ModelCGM residuals_g")
-        ##print("self.predict_g()=",self.predict_g())
-        output = self.data.y.values - self.predict_g()
-        #print("-exit bartpy/bartpy/model.py ModelCGM residuals_g")
-        return output
+    #def residuals_g(self) -> np.ndarray:
+    #    #print("enter bartpy/bartpy/model.py ModelCGM residuals_g")
+    #    ##print("self.predict_g()=",self.predict_g())
+    #    output = self.data.y.values - self.predict_g()
+    #    #print("-exit bartpy/bartpy/model.py ModelCGM residuals_g")
+    #    return output
     
-    def residuals_h(self) -> np.ndarray:
-        #print("enter bartpy/bartpy/model.py ModelCGM residuals_h")
-        ##print("self.predict_h()=",self.predict_h())
-        output = self.data.y.values - self.predict_h()
-        #print("-exit bartpy/bartpy/model.py ModelCGM residuals_h")
-        return output
+    #def residuals_h(self) -> np.ndarray:
+    #    #print("enter bartpy/bartpy/model.py ModelCGM residuals_h")
+    #    ##print("self.predict_h()=",self.predict_h())
+    #    output = self.data.y.values - self.predict_h()
+    #    #print("-exit bartpy/bartpy/model.py ModelCGM residuals_h")
+    #    return output
 
-    def unnormalized_residuals(self) -> np.ndarray:
-        #print("enter bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
-        print("unnormalized_residuals() called ********************************************")
-        #output = self.data.y.unnormalized_y - self.data.y.unnormalize_y(self.predict())
-        #print("-exit bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
-        #return output
-        pass
+    #def unnormalized_residuals(self) -> np.ndarray:
+    #    #print("enter bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
+    #    print("unnormalized_residuals() called ********************************************")
+    #    #output = self.data.y.unnormalized_y - self.data.y.unnormalize_y(self.predict())
+    #    #print("-exit bartpy/bartpy/model.py ModelCGM unnormalized_residuals")
+    #    #return output
+    #    pass
 
-    def predict(self, X: np.ndarray=None) -> np.ndarray:
-        print("predict() called ********************************************")
-        if X is not None:
-            output = self._out_of_sample_predict_g(X)
-            return output
-        output = np.sum([tree.predict_g() for tree in self.trees_g], axis=0)
-        return output
+    #def predict(self, X: np.ndarray=None) -> np.ndarray:
+    #    print("predict() called ********************************************")
+    #    if X is not None:
+    #        output = self._out_of_sample_predict_g(X)
+    #        return output
+    #    output = np.sum([tree.predict_g() for tree in self.trees_g], axis=0)
+    #    return output
     
     def predict_g(self, X: np.ndarray=None) -> np.ndarray:
         if X is not None:
             #print("stage 1")
             if self.fix_g is None:
-                #print("using trees for predict_g")
+                #print("using trees for model.predict_g")
                 output = self._out_of_sample_predict_g(X)
             else:
-                #print("using fix_g for predict")
+                #print("using fix_g for model.predict_g")
                 output = self.fix_g
             return output
         
         if self.fix_g is None:
             #print("stage 2")
-            #print("using trees for predict_g")
+            #print("using trees for model.predict_g")
             output = np.sum([tree.predict_g() for tree in self.trees_g], axis=0)
         else:
-            #print("using fix_g for predict")
+            #print("using fix_g for model.predict_g")
             output = self.fix_g
 
         return output
@@ -249,25 +249,33 @@ class ModelCGM:
         return output
 
     def _out_of_sample_predict_g(self, X: np.ndarray) -> np.ndarray:
+        #print("enter model._out_of_sample_predict_g")
         if type(X) == pd.DataFrame:
             X: pd.DataFrame = X
             X = X.values
         if self.fix_g is not None:
+            #print("using fix_g for model._out_of_sample_predict_g")
             output = self.fix_g
         else:
+            #print("using trees for model._out_of_sample_predict_g")
             output = np.sum([tree.predict(X) for tree in self.trees_g], axis=0)
-            
+        #print("exit model._out_of_sample_predict_g")    
         return output
     
     def _out_of_sample_predict_h(self, X: np.ndarray) -> np.ndarray:
         if type(X) == pd.DataFrame:
             X: pd.DataFrame = X
             X = X.values
-        output = np.sum([tree.predict(X) for tree in self.trees_h], axis=0)
+        if self.fix_h is not None:
+            #print("using fix_g for model._out_of_sample_predict_g")
+            output = self.fix_h
+        else:
+            output = np.sum([tree.predict(X) for tree in self.trees_h], axis=0)
         return output
 
     @property
     def trees_g(self) -> List[Tree]:
+        #print("using model property model.trees_g")
         return self._trees_g
     
     @property
@@ -275,8 +283,10 @@ class ModelCGM:
         return self._trees_h
 
     def refreshed_trees_g(self) -> Generator[Tree, None, None]:
-        
+        #print("enter model.refreshed_trees_g")    
         if self.fix_g is not None:
+            #print("returning but doing nothing...")
+            #print("exit model.refreshed_trees_g")
             return
         
         if self.fix_h is not None:
@@ -294,6 +304,8 @@ class ModelCGM:
             tree.update_y(y_vals - self._prediction_g)
             yield tree
             self._prediction_g += tree.predict_g()
+        #print("returning after doing work in model.refreshed_trees_g")
+        #print("exit model.refreshed_trees_g")
         
     def refreshed_trees_h(self) -> Generator[Tree, None, None]:
         
@@ -353,6 +365,6 @@ def deep_copy_model_cgm(model: ModelCGM) -> ModelCGM:
         mu_g=model._mu_g,
         mu_h=model._mu_h,
         fix_g=model.fix_g,
-        fix_h=model.fix_h
+        fix_h=model.fix_h,
     )
     return copied_model

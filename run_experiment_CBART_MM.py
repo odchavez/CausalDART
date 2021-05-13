@@ -182,7 +182,20 @@ output_name_sigma = (args.output_path +
                "_seed=" + str(args.seed_value) + 
                "_sigma.npy"
 )
-
+output_name_unnorm_sigma = (args.output_path + 
+               "_n_replications=" + str(args.N_replications) + 
+               "_n_samples=" + str(args.n_samples) + 
+               "_n_burn=" + str(args.n_burn) + 
+               "_n_trees_h=" + str(args.n_trees_h) + 
+               "_n_trees_g=" + str(args.n_trees_g) + 
+               "_n_chains=" + str(args.n_chains) + 
+               "_thin=" + str(args.thin) + 
+               "_alpha=" + str(args.alpha) + 
+               "_beta=" + str(args.beta) + 
+               "_k=" + str(args.k) + 
+               "_seed=" + str(args.seed_value) + 
+               "_unnorm_sigma.npy"
+)
 # data
 
 data_path_and_name = args.data_path + args.data_file_stem + str(args.seed_value) + ".csv"
@@ -197,7 +210,7 @@ else:
     p=np.array(data["p_hat"])
 
 if args.fix_h == 1:
-    fix_h = data["Y1"]/p + data["Y0"]/(1-p)
+    fix_h = data["h(x)"]
 else:
     fix_h=None
     
@@ -231,15 +244,18 @@ for i in range(args.N_replications):
             fix_h=fix_h,
         )
     )
+    
+thinned_sample_count = int(args.n_samples*args.thin)
 if args.save_g_h_sigma == 0:
-    posterior_samples = np.zeros((int(args.n_samples*args.n_chains*args.thin),args.n,args.N_replications))
+    posterior_samples = np.zeros((int(thinned_sample_count*args.n_chains*args.thin),args.n,args.N_replications))
     for i in tqdm(range(args.N_replications)):
         model[i].fit_CGM(X, Y, W, p)
         posterior_samples[:,:,i]=model[i].get_posterior_CATE()
 else:
-    sigma = np.zeros((args.n_samples, args.n_chains,args.N_replications))
-    pred_g = np.zeros((args.n, args.n_samples, args.n_chains,args.N_replications))
-    pred_h = np.zeros((args.n, args.n_samples, args.n_chains,args.N_replications))
+    sigma = np.zeros((thinned_sample_count, args.n_chains,args.N_replications))
+    unnormalized_sigma = np.zeros((thinned_sample_count, args.n_chains,args.N_replications))
+    pred_g = np.zeros((args.n, thinned_sample_count, args.n_chains,args.N_replications))
+    pred_h = np.zeros((args.n, thinned_sample_count, args.n_chains,args.N_replications))
     
     for i in tqdm(range(args.N_replications)):
         
@@ -250,8 +266,14 @@ else:
             args.n_chains
         )
         
+        unnormalized_sigma_samples = np.array_split(
+            [x.sigma.current_unnormalized_value() for x in model[i].model_samples_cgm], 
+            args.n_chains
+        )
+        
         for nc in range(args.n_chains):
             sigma[:,nc,i] = sigma_samples[nc]
+            unnormalized_sigma[:,nc,i] = unnormalized_sigma_samples[nc]
             pred_g[:,:,nc,i] = np.array(model[i].extract[nc]['in_sample_predictions_g']).T 
             pred_h[:,:,nc,i] = np.array(model[i].extract[nc]['in_sample_predictions_h']).T 
  
@@ -268,4 +290,7 @@ else:
     
     print("saving sigma parameters...")
     np.save(output_name_sigma, sigma)
+    
+    print("saving unnormalized sigma parameters...")
+    np.save(output_name_unnorm_sigma, unnormalized_sigma)
 
