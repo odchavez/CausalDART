@@ -27,14 +27,14 @@ def get_args():
     parser.add_argument(
         '--n_trees_h', type=int,
         help='n_trees_h',
-        required=False,
-        default = 200
+        required=True,
+        #default = 200
     )
     parser.add_argument(
         '--n_trees_g', type=int,
         help='n_trees_g',
         required=True,
-        default = 200
+        #default = 200
     )
     parser.add_argument(
         '--n_chains', type=int,
@@ -45,6 +45,18 @@ def get_args():
         '--thin', type=float,
         help='thin',
         required=True
+    )
+    parser.add_argument(
+        '--sigma_a', type=float,
+        help='sigma_a:parameter in IG(a,b) prior for sigma',
+        required=True,
+        #default = 3.0
+    )
+    parser.add_argument(
+        '--sigma_q', type=float,
+        help='sigma_q:parameter in IG(a,b) prior for sigma used to select b',
+        required=True
+        #default = 0.75
     )
     parser.add_argument(
         '--alpha', type=float,
@@ -120,6 +132,17 @@ def get_args():
         required=False,
         default=0
     )
+    parser.add_argument(
+        '--fix_sigma', type=int,
+        help='if 1 use true fixed value of sigma.  if 0 estimate sigma from data',
+        required=False,
+        default=0
+    )
+    parser.add_argument(
+        '--per_var', type=float,
+        help='percent of variation of g(x) used to set sigma for CMM model',
+        required=False
+    )
     return parser.parse_args()
 
 
@@ -134,6 +157,8 @@ output_name = (args.output_path +
                "_n_trees_g=" + str(args.n_trees_g) + 
                "_n_chains=" + str(args.n_chains) + 
                "_thin=" + str(args.thin) + 
+               "_sigma_a=" + str(args.sigma_a) + 
+               "_sigma_q=" + str(args.sigma_q) + 
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
@@ -147,7 +172,9 @@ output_name_g = (args.output_path +
                "_n_trees_h=" + str(args.n_trees_h) + 
                "_n_trees_g=" + str(args.n_trees_g) + 
                "_n_chains=" + str(args.n_chains) + 
-               "_thin=" + str(args.thin) + 
+               "_thin=" + str(args.thin) +
+               "_sigma_a=" + str(args.sigma_a) + 
+               "_sigma_q=" + str(args.sigma_q) + 
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
@@ -162,6 +189,8 @@ output_name_h = (args.output_path +
                "_n_trees_g=" + str(args.n_trees_g) + 
                "_n_chains=" + str(args.n_chains) + 
                "_thin=" + str(args.thin) + 
+               "_sigma_a=" + str(args.sigma_a) + 
+               "_sigma_q=" + str(args.sigma_q) + 
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
@@ -176,26 +205,15 @@ output_name_sigma = (args.output_path +
                "_n_trees_g=" + str(args.n_trees_g) + 
                "_n_chains=" + str(args.n_chains) + 
                "_thin=" + str(args.thin) + 
+               "_sigma_a=" + str(args.sigma_a) + 
+               "_sigma_q=" + str(args.sigma_q) + 
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
                "_seed=" + str(args.seed_value) + 
                "_sigma.npy"
 )
-output_name_unnorm_sigma = (args.output_path + 
-               "_n_replications=" + str(args.N_replications) + 
-               "_n_samples=" + str(args.n_samples) + 
-               "_n_burn=" + str(args.n_burn) + 
-               "_n_trees_h=" + str(args.n_trees_h) + 
-               "_n_trees_g=" + str(args.n_trees_g) + 
-               "_n_chains=" + str(args.n_chains) + 
-               "_thin=" + str(args.thin) + 
-               "_alpha=" + str(args.alpha) + 
-               "_beta=" + str(args.beta) + 
-               "_k=" + str(args.k) + 
-               "_seed=" + str(args.seed_value) + 
-               "_unnorm_sigma.npy"
-)
+
 # data
 
 data_path_and_name = args.data_path + args.data_file_stem + str(args.seed_value) + ".csv"
@@ -210,14 +228,20 @@ else:
     p=np.array(data["p_hat"])
 
 if args.fix_h == 1:
-    fix_h = data["h(x)"]
+    fix_h = np.array(data["h(x)"])
 else:
     fix_h=None
     
 if args.fix_g == 1:
-    fix_g = data["tau"]
+    fix_g = np.array(data["tau"])
 else:
     fix_g=None
+    
+if args.fix_sigma == 1:
+    fix_sigma = np.array(data["sig"])[0]
+else:
+    fix_sigma=None
+    
 # define model
 kwargs = {
     "model": "causal_gaussian_mixture"
@@ -231,6 +255,8 @@ for i in range(args.N_replications):
             n_burn=args.n_burn,
             n_trees_h=args.n_trees_h,
             n_trees_g=args.n_trees_g,
+            sigma_a = args.sigma_a,
+            sigma_q = args.sigma_q,
             alpha = args.alpha, # priors for tree depth
             beta = args.beta, # priors for tree depth
             k=args.k,
@@ -242,6 +268,7 @@ for i in range(args.N_replications):
             **kwargs,
             fix_g=fix_g,
             fix_h=fix_h,
+            fix_sigma=fix_sigma
         )
     )
     
@@ -253,7 +280,7 @@ if args.save_g_h_sigma == 0:
         posterior_samples[:,:,i]=model[i].get_posterior_CATE()
 else:
     sigma = np.zeros((thinned_sample_count, args.n_chains,args.N_replications))
-    unnormalized_sigma = np.zeros((thinned_sample_count, args.n_chains,args.N_replications))
+    #unnormalized_sigma = np.zeros((thinned_sample_count, args.n_chains,args.N_replications))
     pred_g = np.zeros((args.n, thinned_sample_count, args.n_chains,args.N_replications))
     pred_h = np.zeros((args.n, thinned_sample_count, args.n_chains,args.N_replications))
     
@@ -266,14 +293,9 @@ else:
             args.n_chains
         )
         
-        unnormalized_sigma_samples = np.array_split(
-            [x.sigma.current_unnormalized_value() for x in model[i].model_samples_cgm], 
-            args.n_chains
-        )
-        
         for nc in range(args.n_chains):
-            sigma[:,nc,i] = sigma_samples[nc]
-            unnormalized_sigma[:,nc,i] = unnormalized_sigma_samples[nc]
+            sigma[:,nc,i] = (sigma_samples[nc]).flatten()
+            #unnormalized_sigma[:,nc,i] = unnormalized_sigma_samples[nc]
             pred_g[:,:,nc,i] = np.array(model[i].extract[nc]['in_sample_predictions_g']).T 
             pred_h[:,:,nc,i] = np.array(model[i].extract[nc]['in_sample_predictions_h']).T 
  
@@ -290,7 +312,5 @@ else:
     
     print("saving sigma parameters...")
     np.save(output_name_sigma, sigma)
-    
-    print("saving unnormalized sigma parameters...")
-    np.save(output_name_unnorm_sigma, unnormalized_sigma)
+
 
