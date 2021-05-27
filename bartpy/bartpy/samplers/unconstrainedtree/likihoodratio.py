@@ -87,7 +87,7 @@ def log_grow_ratio_cgm_g(combined_node: LeafNode, left_node: LeafNode, right_nod
     resp_contribution = -.5*(mu_g**2)/var_mu + left_resp_contribution + right_resp_contribution - combined_resp_contribution
 
     output = first_term + resp_contribution
-
+    #print("G log grow ratio:", output)
     return output
 
 
@@ -99,7 +99,8 @@ def log_grow_ratio_cgm_h(combined_node: LeafNode, left_node: LeafNode, right_nod
     W=combined_node.data.W.values
     p=combined_node.data.p.values
     
-    sigma_h_i_sqr = var * ( W/(p**2) + (1-W)/((1-p)**2) )
+    #sigma_h_i_sqr = var * ( W/(p**2) + (1-W)/((1-p)**2) )
+    sigma_h_i_sqr = var /((p**2) * (1-p)**2) 
     
     sum_sigma_h_i_sqr_left = np.sum( (~left_node.data.mask).astype(int) * 1./sigma_h_i_sqr)
     sum_sigma_h_i_sqr_right = np.sum( (~right_node.data.mask).astype(int) * 1./sigma_h_i_sqr)
@@ -143,7 +144,7 @@ def log_grow_ratio_cgm_h(combined_node: LeafNode, left_node: LeafNode, right_nod
     resp_contribution = -.5*(mu_h**2)/var_mu +  left_resp_contribution + right_resp_contribution - combined_resp_contribution
 
     output = first_term + resp_contribution
-
+    #print("H log grow ratio:", output)
     return output
 
 class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
@@ -180,6 +181,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             return output
 
     def log_tree_ratio_cgm(self, model: ModelCGM, tree: Tree, mutation: TreeMutation):
+        #print("enter bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py UniformTreeMutationLikihoodRatio  log_tree_ratio_cgm")
 
         if mutation.kind == "grow":
             mutation: GrowMutation = mutation
@@ -189,6 +191,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             mutation: PruneMutation = mutation
             output = self.log_tree_ratio_prune_cgm(model, mutation)
             return output
+        #print("exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py UniformTreeMutationLikihoodRatio  log_tree_ratio_cgm")
 
     def log_likihood_ratio(self, model: Model, tree: Tree, proposal: TreeMutation):
 
@@ -211,7 +214,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             return output
         if proposal.kind == "prune":
             proposal: PruneMutation = proposal
-            output = self.log_likihood_ratio_prune_cgm_h(model, proposal)
+            output = self.log_likihood_ratio_prune_cgm_g(model, proposal) ###########this was an h!!!!!
             return output
         else:
             raise NotImplementedError("Only prune and grow mutations supported")
@@ -347,6 +350,7 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
         prob_right_not_split = log_probability_node_not_split(model, proposal.updated_node.right_child)
         prob_updated_node_split = log_probability_node_split(model, proposal.updated_node)
         prob_chosen_split = log_probability_split_within_tree(tree, proposal)
+        
         numerator = prob_left_not_split + prob_right_not_split + prob_updated_node_split + prob_chosen_split
         output = numerator - denominator
 
@@ -437,8 +441,8 @@ def log_probability_split_within_tree(tree: Tree, mutation: GrowMutation) -> flo
     """
 
     prob_node_chosen_to_split_on = - np.log(n_splittable_leaf_nodes(tree))
-    prob_split_chosen = log_probability_split_within_node(mutation)
-    output = prob_node_chosen_to_split_on + prob_split_chosen
+    prob_split_chosen            = log_probability_split_within_node(mutation)
+    output                       = prob_node_chosen_to_split_on + prob_split_chosen
 
     return output
 
@@ -451,9 +455,9 @@ def log_probability_split_within_node(mutation: GrowMutation) -> float:
     log(P(splitting_value | splitting_variable, node, grow) * P(splitting_variable | node, grow))
     """
 
-    prob_splitting_variable_selected = - np.log(mutation.existing_node.data.X.n_splittable_variables)
-    splitting_variable = mutation.updated_node.most_recent_split_condition().splitting_variable
-    splitting_value = mutation.updated_node.most_recent_split_condition().splitting_value
+    prob_splitting_variable_selected    = - np.log(mutation.existing_node.data.X.n_splittable_variables)
+    splitting_variable                  = mutation.updated_node.most_recent_split_condition().splitting_variable
+    splitting_value                     = mutation.updated_node.most_recent_split_condition().splitting_value
     prob_value_selected_within_variable = np.log(
         mutation.existing_node.data.X.proportion_of_value_in_variable(
             splitting_variable, splitting_value
@@ -465,11 +469,15 @@ def log_probability_split_within_node(mutation: GrowMutation) -> float:
 
 
 def log_probability_node_split(model: Model, node: TreeNode):
+    #print("split node depth:", node.depth)
     output = np.log(model.alpha * np.power(1 + node.depth, -model.beta))
+    #print("ln(P(node depth))=", output)
     return output
 
 
 def log_probability_node_not_split(model: Model, node: TreeNode):
+    #print("split node depth:", node.depth)
     output = np.log(1. - model.alpha * np.power(1 + node.depth, -model.beta))
+    #print("ln(1-P(node depth))=", output)
     return output
 

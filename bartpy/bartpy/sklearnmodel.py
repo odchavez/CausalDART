@@ -116,8 +116,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  n_trees_h: int = 200,
                  n_trees_g: int = 200,
                  n_chains: int = 4,
-                 sigma_a: float = 5, #0.001, # should be automatically set by the data
-                 sigma_b: float = 0.001, # should be automatically set by the data
+                 sigma_a: float = 3.0, #0.001, # should be automatically set by the data
+                 sigma_q: float = 0.75, # should be automatically set by the data
                  n_samples: int = 2000,
                  n_burn: int = 2000,
                  thin: float = 0.1,
@@ -132,6 +132,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  n_jobs=-1,
                  fix_g=None,
                  fix_h=None,
+                 fix_sigma=None,
                  **kwargs
                 ):
         
@@ -143,7 +144,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 self.n_trees_g = n_trees_g
                 self.n_chains = n_chains
                 self.sigma_a = sigma_a
-                self.sigma_b = sigma_b
+                self.sigma_q = sigma_q
                 self.n_burn = n_burn
                 self.n_samples = n_samples
                 self.p_grow = 0.5
@@ -165,6 +166,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 self.nomalize_response_bool = nomalize_response_bool
                 self.fix_g=fix_g
                 self.fix_h=fix_h
+                self.fix_sigma=fix_sigma
             
         else:
             self.model_type = 'regression'
@@ -328,23 +330,37 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         self.sigma_h = 0.5*y_range / (self.k * np.power(tree_count, 0.5))
         
         # prior parameters on sigma
-        s_hat = np.std(y_obs)
+        V1 = np.var(y_obs[W==1])
+        V0 = np.var(y_obs[W==0]) 
+        pooled_standard_deviation = np.sqrt(
+                      ((np.sum(W) - 1)*V1 +
+                     (np.sum(1-W)-1)*V0) / 
+                                  (len(W)-2))
+        
+        s_hat = pooled_standard_deviation
+        #print("s_hat = ", s_hat)
         if s_hat >= 1.:
             qval=.1*s_hat
             b = 1
             while qval < s_hat:
-                b*=1.5
+                #print("qval < s_hat")
+                b*=1.01
+                #print("self.sigma_a=",self.sigma_a)
+                #print("b=",b)
                 gamma_sample = np.power(np.random.gamma(self.sigma_a, 1/b, size=1000), -0.5)
-                qval = np.quantile(gamma_sample, q=[0.9])
+                qval = np.quantile(gamma_sample, q=[self.sigma_q])
         else:
             qval=2*s_hat
-            b = 3
+            b = 3.0
             while qval > s_hat:
-                b/=1.10
+                #print("qval > s_hat")
+                b/=1.01
+                #print("self.sigma_a=",self.sigma_a)
+                #print("b=",b)
                 gamma_sample = np.power(np.random.gamma(self.sigma_a, 1/b, size=1000), -0.5)
-                qval = np.quantile(gamma_sample, q=[0.9])
-    
-        self.sigma_b = b    
+                qval = np.quantile(gamma_sample, q=[self.sigma_q])
+                
+        self.sigma_b = b #self.sigma_a * np.var(y_obs)/2.0
         self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
         
         self.model = ModelCGM(
@@ -356,6 +372,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             mu_h=self.mu_h,
             fix_g=self.fix_g,
             fix_h=self.fix_h,
+            fix_sigma=self.fix_sigma,
             n_trees_g=self.n_trees_g,
             n_trees_h=self.n_trees_h,
             alpha=self.alpha,

@@ -16,8 +16,12 @@ class SigmaSampler(Sampler):
     
     def step_cgm(self, model: ModelCGM, sigma: Sigma) -> float:
         #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm")
-        sample_value = self.sample_cgm(model, sigma)
-        sigma.set_value(sample_value)
+        if model.fix_sigma is None:
+            sample_value = self.sample_cgm(model, sigma)
+            sigma.set_value(sample_value)
+        else:
+            sample_value = model.fix_sigma
+            sigma.set_value(model.fix_sigma)
         #print("-exit bartpy/bartpy/samplers/sigma.py SigmaSampler step_cgm")
         return sample_value
     
@@ -47,9 +51,9 @@ class SigmaSampler(Sampler):
     @staticmethod
     def sample_cgm(model: ModelCGM, sigma: Sigma) -> float:
         #print("enter bartpy/bartpy/samplers/sigma.py SigmaSampler sample_cgm")
-        paw = model.data.W.values*(model.data.p.values**2) + (1-model.data.W.values)*((1-model.data.p.values)**2)
+        paw2 = model.data.W.values*(model.data.p.values**2) + (1-model.data.W.values)*((1-model.data.p.values)**2)
         posterior_alpha = sigma.alpha + (model.data.X.n_obsv / 2.)
-        posterior_beta = sigma.beta + (0.5 * (np.sum(paw*np.square(model.residuals()))))
+        posterior_beta = sigma.beta + (0.5 * (np.sum(paw2*np.square(model.residuals()))))
         #print("posterior_alpha=",posterior_alpha)
         #print("posterior_beta=",posterior_beta)
         draw = np.power(np.random.gamma(posterior_alpha, 1./posterior_beta), -0.5)

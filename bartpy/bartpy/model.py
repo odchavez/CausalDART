@@ -103,6 +103,7 @@ class ModelCGM:
                  mu_h=None,
                  fix_g=None,
                  fix_h=None,
+                 fix_sigma=None,
                  trees_g: Optional[List[Tree]]=None,
                  trees_h: Optional[List[Tree]]=None,
                  n_trees_g: int=50,
@@ -130,7 +131,8 @@ class ModelCGM:
         self._initializer = initializer
         self.kwargs=kwargs
         self.fix_g = fix_g
-        self.fix_h = fix_h 
+        self.fix_h = fix_h
+        self.fix_sigma = fix_sigma
         
         if trees_g is None:
             self.n_trees_g = n_trees_g
@@ -284,6 +286,7 @@ class ModelCGM:
 
     def refreshed_trees_g(self) -> Generator[Tree, None, None]:
         #print("enter model.refreshed_trees_g")    
+        
         if self.fix_g is not None:
             #print("returning but doing nothing...")
             #print("exit model.refreshed_trees_g")
@@ -296,7 +299,13 @@ class ModelCGM:
         
         if self._prediction_g is None:
             self._prediction_g = self.predict_g()
+        #print("*******************************************")
+        #print("**                  G                    **")
+        #print("*******************************************")
+        #tree_counter = 0
         for tree in self._trees_g:
+            #tree_counter+=1
+            #print("g tree:",str(tree_counter))
             self._prediction_g -= tree.predict_g()
             W = self.data.W.values
             p = self.data.p.values
@@ -308,7 +317,7 @@ class ModelCGM:
         #print("exit model.refreshed_trees_g")
         
     def refreshed_trees_h(self) -> Generator[Tree, None, None]:
-        
+        #print("Refreshing h(x) trees...")
         if self.fix_h is not None:
             return
         
@@ -319,13 +328,20 @@ class ModelCGM:
         
         if self._prediction_h is None:
             self._prediction_h = self.predict_h()
+        #print("*******************************************")
+        #print("**                  H                    **")
+        #print("*******************************************")
+        #tree_counter = 0
         for tree in self._trees_h:
-            self._prediction_h -= tree.predict_h()
+            #tree_counter+=1
+            #print("h tree:",str(tree_counter))
+            self._prediction_h -= tree.predict_h() # sum of trees minus j_th tree
             W = self.data.W.values
             p = self.data.p.values
             factor = (W/(1-p)) - ((1-W)/p)
-            current_g_adjust = current_g_of_X
-            y_vals = (self.data.y.values - current_g_adjust)*factor
+            #print("first self.data.y.values[:10]=", self.data.y.values[:10])
+            #print("(self.data.y.values - current_g_of_X)*factor=",((self.data.y.values - current_g_of_X)*factor)[:10])
+            y_vals = (self.data.y.values - current_g_of_X)*factor
             tree.update_y(y_vals - self._prediction_h)
             yield tree
             self._prediction_h += tree.predict_h()
@@ -366,5 +382,6 @@ def deep_copy_model_cgm(model: ModelCGM) -> ModelCGM:
         mu_h=model._mu_h,
         fix_g=model.fix_g,
         fix_h=model.fix_h,
+        fix_sigma=model.fix_sigma
     )
     return copied_model
