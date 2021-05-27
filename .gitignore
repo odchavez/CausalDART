@@ -2,4 +2,5 @@
 .ipynb_checkpoints/
 old_*/
 bartpy/.DS_Store
-
+__pycache__/
+simulate_data/*
