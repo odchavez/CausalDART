@@ -126,10 +126,11 @@ class ModelSamplerCGM(Sampler):
             step_trace_dict = self.step(model, trace_logger)
             if ss % thin_inverse == 0:
                 if store_in_sample_predictions:
-                    in_sample_log   = trace_logger["In Sample Prediction"](model.predict())
+                    in_sample_log_g = trace_logger["In Sample Prediction"](model.predict_g())
                     in_sample_log_h = trace_logger["In Sample Prediction"](model.predict_h())
-                    if in_sample_log is not None:
-                        trace.append(in_sample_log)
+                    if in_sample_log_g is not None:
+                        trace.append(in_sample_log_g)
+                    if in_sample_log_h is not None:
                         trace_h.append(in_sample_log_h)
                 if store_acceptance:
                     acceptance_trace.append(step_trace_dict)

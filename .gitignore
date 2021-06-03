@@ -1,0 +1,8 @@
+**/*.DS_Store
+.ipynb_checkpoints/
+old_*/
+bartpy/.DS_Store
+__pycache__/
+simulate_data/*
+experiment_results/
+data_cf_all/

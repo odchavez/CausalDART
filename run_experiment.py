@@ -99,6 +99,12 @@ def get_args():
         required=False,
         default="CBARTMM"
     )
+    parser.add_argument(
+        '--data_prior', type=int,
+        help='data_prior: if 0, p(g) = p(h) = 0.  If 1, p(g)=mean(Y_i_star), p(h)=mean(y1/p) + mean(y0/(1-p))',
+        required=True,
+        default="CBARTMM"
+    )
     return parser.parse_args()
 
 
@@ -116,7 +122,8 @@ output_name = (args.output_path +
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
-               "_scale_response=" + str(args.scale_response) +  
+               "_scale_response=" + str(args.scale_response) + 
+               "_data_prior=" + str(args.data_prior) + 
                ".npy"
 )
 output_name_g = (args.output_path + 
@@ -130,7 +137,8 @@ output_name_g = (args.output_path +
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
-               "_scale_response=" + str(args.scale_response) +   
+               "_scale_response=" + str(args.scale_response) + 
+               "_data_prior=" + str(args.data_prior) + 
                "_g.npy"
 )
 output_name_h = (args.output_path + 
@@ -144,7 +152,8 @@ output_name_h = (args.output_path +
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
-               "_scale_response=" + str(args.scale_response) +  
+               "_scale_response=" + str(args.scale_response) + 
+               "_data_prior=" + str(args.data_prior) + 
                "_h.npy"
 )
 output_name_sigma = (args.output_path + 
@@ -158,7 +167,8 @@ output_name_sigma = (args.output_path +
                "_alpha=" + str(args.alpha) + 
                "_beta=" + str(args.beta) + 
                "_k=" + str(args.k) + 
-               "_scale_response=" + str(args.scale_response) +  
+               "_scale_response=" + str(args.scale_response) + 
+               "_data_prior=" + str(args.data_prior) + 
                "_sigma.npy"
 )
 # data
@@ -212,7 +222,6 @@ if args.model_type == "CBARTMM":
             SklearnModel(
                 n_samples=args.n_samples, 
                 n_burn=args.n_burn,
-                #n_trees=0,
                 n_trees_h=args.n_trees_h,
                 n_trees_g=args.n_trees_g,
                 alpha = args.alpha, # priors for tree depth
@@ -223,6 +232,7 @@ if args.model_type == "CBARTMM":
                 n_jobs=-1,
                 store_in_sample_predictions=True,
                 nomalize_response_bool = args.scale_response,
+                data_prior = args.data_prior,
                 **kwargs
             )
         )
@@ -357,7 +367,12 @@ print("models fit successfully")
 if args.save_g_h_sigma == 0:
     np.save(output_name, posterior_samples)
 else:
+    print("saving g trees...")
     np.save(output_name_g, pred_g)
+
+    print("saving h trees...")
     np.save(output_name_h, pred_h)
+    
+    print("saving sigma parameters...")
     np.save(output_name_sigma, sigma)
 

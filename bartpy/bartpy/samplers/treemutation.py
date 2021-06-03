@@ -106,6 +106,9 @@ class TreeMutationLikihoodRatio(ABC):
             logged ratio of likelihoods
         """
         #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_g")
+        #print("self.log_transition_ratio(tree, mutation)=",self.log_transition_ratio(tree, mutation))
+        #print("self.log_likihood_ratio_cgm_h(model, tree, mutation)=",self.log_likihood_ratio_cgm_g(model, tree, mutation))
+        #print("self.log_tree_ratio_cgm(model, tree, mutation)=",self.log_tree_ratio_cgm(model, tree, mutation))
         output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio_cgm_g(model, tree, mutation) + self.log_tree_ratio_cgm(model, tree, mutation)
         #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_g")
         return output
@@ -131,6 +134,9 @@ class TreeMutationLikihoodRatio(ABC):
             logged ratio of likelihoods
         """
         #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_h")
+        #print("self.log_transition_ratio(tree, mutation)=",self.log_transition_ratio(tree, mutation))
+        #print("self.log_likihood_ratio_cgm_h(model, tree, mutation)=",self.log_likihood_ratio_cgm_h(model, tree, mutation))
+        #print("self.log_tree_ratio_cgm(model, tree, mutation)=",self.log_tree_ratio_cgm(model, tree, mutation))
         output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio_cgm_h(model, tree, mutation) + self.log_tree_ratio_cgm(model, tree, mutation)
         #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_h")
         return output

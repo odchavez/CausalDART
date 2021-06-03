@@ -52,37 +52,37 @@ class TreeNode(object):
             self.right_child.update_y(y)
         #print("-exit bartpy/bartpy/node.py TreeNode update_y")
 
-    def update_y_tilde_g(self, y_tilde_g):
-        #print("enter bartpy/bartpy/node.py TreeNode update_y_tilde_g")
-        self.data.update_y_tilde_g(y_tilde_g)
-        if self.left_child is not None:
-            self.left_child.update_y_tilde_g(y_tilde_g)
-            self.right_child.update_y_tilde_g(y_tilde_g)
-        #print("-exit bartpy/bartpy/node.py TreeNode update_y_tilde_g")
-
-    def update_y_tilde_h(self, y_tilde_h):
-        #print("enter bartpy/bartpy/node.py TreeNode update_y_tilde_h")
-        self.data.update_y_tilde_h(y_tilde_h)
-        if self.left_child is not None:
-            self.left_child.update_y_tilde_h(y_tilde_h)
-            self.right_child.update_y_tilde_h(y_tilde_h)
-        #print("-exit bartpy/bartpy/node.py TreeNode update_y_tilde_h")
-
-    def update_W(self, W):
-        #print("enter bartpy/bartpy/node.py TreeNode update_W")
-        self.data.update_W(W)
-        if self.left_child is not None:
-            self.left_child.update_W(W)
-            self.right_child.update_W(W)
-        #print("-exit bartpy/bartpy/node.py TreeNode update_W")
-        
-    def update_p(self, p):
-        #print("enter bartpy/bartpy/node.py TreeNode update_p")
-        self.data.update_p(p)
-        if self.left_child is not None:
-            self.left_child.update_p(p)
-            self.right_child.update_p(p)
-        #print("-exit bartpy/bartpy/node.py TreeNode update_p")
+    #def update_y_tilde_g(self, y_tilde_g):
+    #    #print("enter bartpy/bartpy/node.py TreeNode update_y_tilde_g")
+    #    self.data.update_y_tilde_g(y_tilde_g)
+    #    if self.left_child is not None:
+    #        self.left_child.update_y_tilde_g(y_tilde_g)
+    #        self.right_child.update_y_tilde_g(y_tilde_g)
+    #    #print("-exit bartpy/bartpy/node.py TreeNode update_y_tilde_g")
+#
+    #def update_y_tilde_h(self, y_tilde_h):
+    #    #print("enter bartpy/bartpy/node.py TreeNode update_y_tilde_h")
+    #    self.data.update_y_tilde_h(y_tilde_h)
+    #    if self.left_child is not None:
+    #        self.left_child.update_y_tilde_h(y_tilde_h)
+    #        self.right_child.update_y_tilde_h(y_tilde_h)
+    #    #print("-exit bartpy/bartpy/node.py TreeNode update_y_tilde_h")
+#
+    #def update_W(self, W):
+    #    #print("enter bartpy/bartpy/node.py TreeNode update_W")
+    #    self.data.update_W(W)
+    #    if self.left_child is not None:
+    #        self.left_child.update_W(W)
+    #        self.right_child.update_W(W)
+    #    #print("-exit bartpy/bartpy/node.py TreeNode update_W")
+    #    
+    #def update_p(self, p):
+    #    #print("enter bartpy/bartpy/node.py TreeNode update_p")
+    #    self.data.update_p(p)
+    #    if self.left_child is not None:
+    #        self.left_child.update_p(p)
+    #        self.right_child.update_p(p)
+    #    #print("-exit bartpy/bartpy/node.py TreeNode update_p")
         
 
 

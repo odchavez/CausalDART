@@ -120,10 +120,10 @@ def make_basic_linear_data(p, N, y_0_1_noise_scale=0.0001, log_odds_noise_scale=
     return basic_linear_data, lm_true_beta_propensity_scores, lm_true_beta_response, predictor_columns
 
 
-def make_hahn_data(function_type="linear", effect_type="heterogeneous", n_in_study=500):
+def make_hahn_data(function_type="linear", effect_type="heterogeneous", n_in_study=500, seed=0):
 # Five variables comprise x; the first three are continuous, drawn as standard normal random variables, the fourth is a dichotomous variable and the fifth is unordered categorical, taking three levels (denoted 1, 2, 3).
     
-    np.random.seed(0)
+    np.random.seed(seed)
     
     def g(x):
         # g(1) = 2, g(2) = −1 and g(3) = −4
@@ -160,45 +160,43 @@ def make_hahn_data(function_type="linear", effect_type="heterogeneous", n_in_stu
 
     output=pd.DataFrame(
         {
-            "x_0":1,
-            "x_1":x_1,
-            "x_2":x_2,
-            "x_3":x_3,
-            "x_4":x_4,
-            "x_5":x_5,
-            "w_i":w_i,
-            "mu":mu,
-            "Tau":Tau,
-            "pi":pi,
-            "x_1_x_3":x_1*x_3,
-            "x_2_x_5":x_2*x_5,
-            "x_4_1": dummies.x_4_1, "x_4_2": dummies.x_4_2, "x_4_3": dummies.x_4_3,
-            "P(T=1)":pi,
-            "T":w_i,
-            "Y0_given_X": mu,
-            "Y1_given_X": mu+Tau,
-            "Y_obs":mu+Tau*w_i,
+            "X0":1,
+            "X1":x_1,
+            "X2":x_2,
+            "X3":x_3,
+            "X4":x_4,
+            "X5":x_5,
+            "W":w_i,
+            "tau":Tau,
+            "p":pi,
+            "X1_X3":x_1*x_3,
+            "X2_X5":x_2*x_5,
+            "X4_1": dummies.x_4_1, "X4_2": dummies.x_4_2, "X4_3": dummies.x_4_3,
+            "Y0": mu,
+            "Y1": mu+Tau,
+            "Y":mu+Tau*w_i,
         }
     )
     return output
 
 
-def make_zaidi_data_A(n=250):
+def make_zaidi_data_A(n=250, seed=0, variance=0.0001):
 
     # data
-    np.random.seed(0)
+    np.random.seed(seed)
 
     X_1_15  = np.random.normal(loc=0, scale=1, size=(250,15))
     X_16_30 = np.random.uniform(low=0,high=1, size=(250,15))
     p_k = expit(X_1_15[:,:5] - X_16_30[:,:5])
     X_31_35 = np.random.binomial(n=1, p=p_k)
-    X_36_40 = 5 + 0.75 * X_1_15[:,:5] * (X_16_30[:,:5] - X_31_35)
+    lambda_k = 5 + 0.75 * X_1_15[:,:5] * (X_16_30[:,:5] + X_31_35)
+    X_36_40 = np.random.poisson(lam=lambda_k)
     X=np.concatenate([X_1_15, X_16_30, X_31_35, X_36_40], axis=1)
     
     # propensity scores
     true_pi = expit(
         .3*np.sum(X_1_15[:,:5], axis=1) - 
-        .5*np.sum(X_16_30[:,5:10], axis=1) - 
+        .5*np.sum(X_16_30[:,6:11], axis=1) - 
         .0001 * (np.sum(X_16_30[:,-5:], axis=1) + np.sum(X_31_35, axis=1)) +
         .055 * np.sum(X_36_40, axis=1)
     )
@@ -216,7 +214,8 @@ def make_zaidi_data_A(n=250):
     W = np.random.binomial(n=1, p=true_pi)
     
     # potential outcomes
-    error = np.random.normal(0, np.sqrt(0.0001), size=n)
+    error_0 = np.random.normal(0, np.sqrt(variance), size=n)
+    error_1 = np.random.normal(0, np.sqrt(variance), size=n)
     
     term = (
         X_16_30[:,0] * np.exp(np.reshape(X_16_30[:,-1:], n)) + 
@@ -225,34 +224,37 @@ def make_zaidi_data_A(n=250):
         X_16_30[:,3] * np.exp(np.reshape(X_31_35[:,2], n)) 
     )
     f_of_X = term/(1+term)
-    
-    Y0 = 0.15 * np.sum(X_1_15[:,:5], axis=1) + 1.5 * np.exp( 1 + f_of_X ) + error
-    Y1 = (
+
+    f0=0.15 * np.sum(X_1_15[:,:5], axis=1) + 1.5 * np.exp( 1 + 1.5*f_of_X )
+    f1=(
         np.sum(
             2.15*X_1_15[:,:5] + 
             2.75*X_1_15[:,:5]*X_1_15[:,:5] + 
             10 * X_1_15[:,:5]*X_1_15[:,:5]*X_1_15[:,:5],
             axis=1
         ) + 
-        1.25*np.sqrt(.5 + 1.5*np.sum(X_36_40, axis=1)) + 
-        error
+        1.25*np.sqrt(.5 + 1.5*np.sum(X_36_40, axis=1))
     )
     
-    tau = Y1-Y0
+    Y0 = f0 + error_0
+    Y1 = f1 + error_1
+    
+    tau = f1-f0
+    h = f1/true_pi  + f0/(1-true_pi)
     
     Y = W*Y1 + (1-W)*Y0
-    Xy = np.concatenate([X_1_15[:,:5],X_36_40],axis=1)
+    Xy = np.concatenate([X_1_15[:,:5], X_16_30[:,0:4], X_16_30[:,-1:], X_31_35[:,0:3], X_36_40],axis=1)
     return {
-        "X":X, "Xp":Xp, "Xy":Xy, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
+        "X":X, "Xp":Xp, "Xy":Xy, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0, "h(x)":h
     }
 
 
-def make_zaidi_data_B(n_in_study=250):
-    np.random.seed(0)
+def make_zaidi_data_B(n_in_study=250, seed=0, variance=0.0001):
+    np.random.seed(seed)
 
     def h(x):
-        # g(1) = 2, g(2) = −1 and g(3) = −4
-        return -2*x+5
+        # g(0) = 2, g(1) = −1 and g(2) = −4
+        return -3*x+2
     
     # the data
     X_1_3 = np.random.normal(loc=0, scale=1, size=(n_in_study, 3))
@@ -265,19 +267,82 @@ def make_zaidi_data_B(n_in_study=250):
     
     # outcomes
     f_of_X = -6 + h(X_5) + np.absolute(X_1_3[:,2] - 1)
-    error = np.random.normal(loc=0, scale=np.sqrt(0.0001), size = n_in_study)
-    Y0 = f_of_X - 15*X_1_3[:,2] + error
-    Y1 = f_of_X + (1 + 2*X_1_3[:,1]*X_1_3[:,2]) + error
+    error_0 = np.random.normal(loc=0, scale=np.sqrt(variance), size = n_in_study)
+    error_1 = np.random.normal(loc=0, scale=np.sqrt(variance), size = n_in_study)
     
-    tau = Y1 - Y0
+    f0 = f_of_X - 15*X_1_3[:,2]
+    f1 = f_of_X + (1 + 2*X_1_3[:,1]*X_1_3[:,2])
+    
+    Y0 = f0 + error_0
+    Y1 = f1 + error_1
+    
+    tau = f1 - f0
+    h = f1/true_pi  + f0/(1-true_pi)
     
     Y = W*Y1 + (1-W)*Y0
     
     X=np.concatenate([X_1_3, X_4.reshape((n_in_study,1)), X_5.reshape((n_in_study,1))], axis=1)
     
     return {
-        "X":X, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0
+        "X":X, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0, "h(x)":h,
     }
+    
+
+def make_CMM_data_B(n, per_var, seed):
+    """
+    n (int): number of observations
+    per_var (float): percent of g's variation = model std dev.
+    seed (int): seed for random number generator
+    """
+    np.random.seed(seed)
+    X = np.random.uniform(low=-3,high=3, size=(n,3))
+
+    f0 = X[:,1]**2
+    f1 = X[:,1]**2 + np.abs(X[:,2])
+
+    pi = expit(X[:,0])#np.ones(n)*0.5#expit(X[:,0])
+    h = f1/pi + f0/(1-pi)
+    g = tau = f1-f0
+    print("Var(g):",np.var(g))
+    print("Var(h):",np.var(h))
+    max_val = np.var(g)#np.max((np.var(g),np.var(h)))
+    
+    sig = np.sqrt(max_val*per_var)
+    print("sig=", sig)
+    sig0_star = sig/(1-pi)
+    sig1_star = sig/pi
+
+    error0_star = -pi*h    + np.random.normal(loc=0, scale = sig0_star)
+    error1_star = (1-pi)*h + np.random.normal(loc=0, scale = sig1_star)
+
+    W = np.random.binomial(n=1, p=pi)
+
+    Y0 = -(1-pi)*(g+error0_star)
+    Y1 = pi*(g+error1_star)
+    
+    Y_obs = np.zeros(n)
+    Y_obs[W==0] = Y0[W==0]
+    Y_obs[W==1] = Y1[W==1]
+
+    y_i_star = np.zeros(n)
+    y_i_star[W==0] = (g + error0_star)[W==0]
+    y_i_star[W==1] = (g + error1_star)[W==1]
+
+    output = {
+        'X':X,
+        'Y_obs':Y_obs,
+        'Y1':Y1,
+        'Y0':Y0,
+        'f1':f1,
+        'f0':f0,
+        "Y_i_star":y_i_star,
+        'g(x)':g,
+        'h(x)':h,
+        'p':pi,
+        'W':W,
+        'sig':sig,
+    }
+    return output
     
     
 def get_posterior_samples_data(stem,nreps,nsamp,nburn,ntree,nchain,thin,alpha,beta,k):
@@ -295,7 +360,66 @@ def get_posterior_samples_data(stem,nreps,nsamp,nburn,ntree,nchain,thin,alpha,be
     )
     return np.load(name)   
     
+
+def make_CMM_data_C(n, per_var, seed):
+    """
+    n (int): number of observations
+    per_var (float): percent of g's variation = model std dev.
+    seed (int): seed for random number generator
+    """
+    np.random.seed(seed)
+    X = np.random.uniform(low=-3,high=3, size=(n,1))
+
+    pi = expit(X[:,0])#np.ones(n)*0.5#expit(X[:,0])
     
+    f0 = 1 - pi
+    f1 = pi
+
+    
+    h = f1/pi + f0/(1-pi)
+    g = tau = f1-f0
+    print("Var(g):",np.var(g))
+    print("Var(h):",np.var(h))
+    max_val = np.var(g)#np.max((np.var(g),np.var(h)))
+    
+    sig = np.sqrt(max_val*per_var)
+    print("sig=", sig)
+    sig0_star = sig/(1-pi)
+    sig1_star = sig/pi
+
+    error0_star = -pi*h    + np.random.normal(loc=0, scale = sig0_star)
+    error1_star = (1-pi)*h + np.random.normal(loc=0, scale = sig1_star)
+
+    W = np.random.binomial(n=1, p=pi)
+
+    Y0 = -(1-pi)*(g+error0_star)
+    Y1 = pi*(g+error1_star)
+    
+    Y_obs = np.zeros(n)
+    Y_obs[W==0] = Y0[W==0]
+    Y_obs[W==1] = Y1[W==1]
+
+    y_i_star = np.zeros(n)
+    y_i_star[W==0] = (g + error0_star)[W==0]
+    y_i_star[W==1] = (g + error1_star)[W==1]
+
+    output = {
+        'X':X,
+        'Y_obs':Y_obs,
+        'Y1':Y1,
+        'Y0':Y0,
+        'f1':f1,
+        'f0':f0,
+        "Y_i_star":y_i_star,
+        'g(x)':g,
+        'h(x)':h,
+        'p':pi,
+        'W':W,
+        'sig':sig,
+    }
+    return output
+
+
 def get_posterior_samples_data_2(stem,nreps,nsamp,nburn,ntreeh,ntreeg,nchain,thin,alpha,beta,k):
     name = (
     stem +
@@ -315,9 +439,10 @@ def get_posterior_samples_data_2(stem,nreps,nsamp,nburn,ntreeh,ntreeg,nchain,thi
 
 def CBARTMM_likelihood(resp, W,p,g,h,sigma):
     n=len(p)
-    denom = W/p + (1-W)/(1-p)
-    delta = g + (W*(1-p) - (1-W)*p)*h
-    LL = -(n*.5)*np.log(2*np.pi)  - n*np.log(sigma) - 0.5*(sigma**2)*np.sum( ((resp-delta)/denom)**2 )
+    i_factor = W/p + (1-W)/(1-p)
+    mu_i = g + (W*(1-p) - (1-W)*p)*h
+    sigma_i = sigma*i_factor
+    LL = -(n*.5)*np.log(2*np.pi)  - np.sum(np.log(sigma_i)) - 0.5*np.sum( ( (resp-mu_i)/sigma_i)**2 )
     return LL
     
     
