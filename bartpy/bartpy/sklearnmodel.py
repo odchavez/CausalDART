@@ -4,6 +4,9 @@ from typing import List, Callable, Mapping, Union, Optional
 import numpy as np
 import pandas as pd
 
+from scipy.stats import gamma, invgamma
+from scipy import optimize
+
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, BaseEstimator
 
@@ -19,6 +22,18 @@ from bartpy.bartpy.samplers.treemutation import TreeMutationSampler
 from bartpy.bartpy.samplers.unconstrainedtree.treemutation import get_tree_sampler
 from bartpy.bartpy.sigma import Sigma
 
+def get_gamma_seeds(s_hat, a, q):
+    """
+    Function to get initial guesses for root.
+    Used to deterimin b parameter in the invers-gamma(a,b) prior.    
+    """
+    x = -1
+    b_top=s_hat/1000000
+    while x<0:
+        b_bottom = b_top
+        b_top*=1.01
+        x = gamma.cdf(x=(1/s_hat)**2, a=a, loc=0, scale=1/b_top) - (1-q)  
+    return b_bottom, b_top
 
 def run_chain(model: 'SklearnModel', X: np.ndarray, y: np.ndarray):
     """
@@ -339,28 +354,31 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         
         s_hat = pooled_standard_deviation
         #print("s_hat = ", s_hat)
-        if s_hat >= 1.:
-            qval=.1*s_hat
-            b = 1
-            while qval < s_hat:
-                #print("qval < s_hat")
-                b*=1.01
-                #print("self.sigma_a=",self.sigma_a)
-                #print("b=",b)
-                gamma_sample = np.power(np.random.gamma(self.sigma_a, 1/b, size=1000), -0.5)
-                qval = np.quantile(gamma_sample, q=[self.sigma_q])
-        else:
-            qval=2*s_hat
-            b = 3.0
-            while qval > s_hat:
-                #print("qval > s_hat")
-                b/=1.01
-                #print("self.sigma_a=",self.sigma_a)
-                #print("b=",b)
-                gamma_sample = np.power(np.random.gamma(self.sigma_a, 1/b, size=1000), -0.5)
-                qval = np.quantile(gamma_sample, q=[self.sigma_q])
+        #if s_hat >= 1.:
+        #    qval=.1*s_hat
+        #    b = 1
+        #    while qval < s_hat:
+        #        #print("qval < s_hat")
+        #        b*=1.01
+        #        #print("self.sigma_a=",self.sigma_a)
+        #        #print("b=",b)
+        #        gamma_sample = np.power(np.random.gamma(self.sigma_a, 1/b, size=1000), -0.5)
+        #        qval = np.quantile(gamma_sample, q=[self.sigma_q])
+        #else:
+        #    qval=2*s_hat
+        #    b = 3.0
+        #    while qval > s_hat:
+        #        #print("qval > s_hat")
+        #        b/=1.01
+        #        #print("self.sigma_a=",self.sigma_a)
+        #        #print("b=",b)
+        #        gamma_sample = np.power(np.random.gamma(self.sigma_a, 1/b, size=1000), -0.5)
+        #        qval = np.quantile(gamma_sample, q=[self.sigma_q])
+        minb, maxb=get_gamma_seeds(s_hat=s_hat, a=self.sigma_a, q=self.sigma_q)
+        fun = lambda b: gamma.cdf(x=1/(s_hat**2), a=self.sigma_a, loc=0, scale=1/b) - (1-self.sigma_q)
+        sol = optimize.root_scalar(fun, x0=minb, x1=maxb)
                 
-        self.sigma_b = b #self.sigma_a * np.var(y_obs)/2.0
+        self.sigma_b = sol.root #b #self.sigma_a * np.var(y_obs)/2.0
         self.sigma = Sigma(self.sigma_a, self.sigma_b, self.data.y.normalizing_scale)
         
         self.model = ModelCGM(

@@ -286,7 +286,64 @@ def make_zaidi_data_B(n_in_study=250, seed=0, variance=0.0001):
     return {
         "X":X, "Y":Y, "W":W, "p":true_pi, "tau":tau, "Y1":Y1, "Y0":Y0, "h(x)":h,
     }
+
+
+def make_CMM_data_A(n, per_var, seed):
+    """
+    n (int): number of observations
+    per_var (float): percent of g's variation = model std dev.
+    seed (int): seed for random number generator
+    """
+    np.random.seed(seed)
+    X = np.random.uniform(low=-3,high=3, size=(n,3))
+
+    f0 = X[:,1]**2
+    f1 = X[:,1]**2 + np.abs(X[:,2])
+
+    pi = expit(X[:,0])#np.ones(n)*0.5#expit(X[:,0])
+    h = f1/pi + f0/(1-pi)
+    g = tau = f1-f0
+    #print("Var(g):",np.var(g))
+    #print("Var(h):",np.var(h))
+    max_val = np.var(g)#np.max((np.var(g),np.var(h)))
     
+    sig = np.sqrt(max_val*per_var)
+    #print("sig=", sig)
+    sig0_star = sig/(1-pi)
+    sig1_star = sig/pi
+
+    error0_star = -pi*h    + np.random.normal(loc=0, scale = sig0_star)
+    error1_star = (1-pi)*h + np.random.normal(loc=0, scale = sig1_star)
+
+    W = np.random.binomial(n=1, p=pi)
+
+    Y0 = -(1-pi)*(g+error0_star)
+    Y1 = pi*(g+error1_star)
+    
+    Y_obs = np.zeros(n)
+    Y_obs[W==0] = Y0[W==0]
+    Y_obs[W==1] = Y1[W==1]
+
+    y_i_star = np.zeros(n)
+    y_i_star[W==0] = (g + error0_star)[W==0]
+    y_i_star[W==1] = (g + error1_star)[W==1]
+
+    output = {
+        'X':X,
+        'Y_obs':Y_obs,
+        'Y1':Y1,
+        'Y0':Y0,
+        'f1':f1,
+        'f0':f0,
+        "Y_i_star":y_i_star,
+        'g(x)':g,
+        'h(x)':h,
+        'p':pi,
+        'W':W,
+        'sig':sig,
+    }
+    return output
+
 
 def make_CMM_data_B(n, per_var, seed):
     """
@@ -303,12 +360,12 @@ def make_CMM_data_B(n, per_var, seed):
     pi = expit(X[:,0])#np.ones(n)*0.5#expit(X[:,0])
     h = f1/pi + f0/(1-pi)
     g = tau = f1-f0
-    print("Var(g):",np.var(g))
-    print("Var(h):",np.var(h))
+    #print("Var(g):",np.var(g))
+    #print("Var(h):",np.var(h))
     max_val = np.var(g)#np.max((np.var(g),np.var(h)))
     
     sig = np.sqrt(max_val*per_var)
-    print("sig=", sig)
+    #print("sig=", sig)
     sig0_star = sig/(1-pi)
     sig1_star = sig/pi
 
@@ -378,12 +435,12 @@ def make_CMM_data_C(n, per_var, seed):
     
     h = f1/pi + f0/(1-pi)
     g = tau = f1-f0
-    print("Var(g):",np.var(g))
-    print("Var(h):",np.var(h))
+    #print("Var(g):",np.var(g))
+    #print("Var(h):",np.var(h))
     max_val = np.var(g)#np.max((np.var(g),np.var(h)))
     
     sig = np.sqrt(max_val*per_var)
-    print("sig=", sig)
+    #print("sig=", sig)
     sig0_star = sig/(1-pi)
     sig1_star = sig/pi
 
