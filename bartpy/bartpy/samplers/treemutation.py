@@ -109,7 +109,7 @@ class TreeMutationLikihoodRatio(ABC):
         #print("self.log_transition_ratio(tree, mutation)=",self.log_transition_ratio(tree, mutation))
         #print("self.log_likihood_ratio_cgm_h(model, tree, mutation)=",self.log_likihood_ratio_cgm_g(model, tree, mutation))
         #print("self.log_tree_ratio_cgm(model, tree, mutation)=",self.log_tree_ratio_cgm(model, tree, mutation))
-        output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio_cgm_g(model, tree, mutation) + self.log_tree_ratio_cgm(model, tree, mutation)
+        output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio_cgm_g(model, tree, mutation) + self.log_tree_ratio_cgm_g(model, tree, mutation)
         #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_g")
         return output
 
@@ -137,7 +137,7 @@ class TreeMutationLikihoodRatio(ABC):
         #print("self.log_transition_ratio(tree, mutation)=",self.log_transition_ratio(tree, mutation))
         #print("self.log_likihood_ratio_cgm_h(model, tree, mutation)=",self.log_likihood_ratio_cgm_h(model, tree, mutation))
         #print("self.log_tree_ratio_cgm(model, tree, mutation)=",self.log_tree_ratio_cgm(model, tree, mutation))
-        output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio_cgm_h(model, tree, mutation) + self.log_tree_ratio_cgm(model, tree, mutation)
+        output = self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio_cgm_h(model, tree, mutation) + self.log_tree_ratio_cgm_h(model, tree, mutation)
         #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_probability_ratio_cgm_h")
         return output
     
@@ -189,7 +189,31 @@ class TreeMutationLikihoodRatio(ABC):
         #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio")
 
     @abstractmethod
-    def log_tree_ratio_cgm(self, model: ModelCGM, tree: Tree, mutation: TreeMutation) -> float:
+    def log_tree_ratio_cgm_g(self, model: ModelCGM, tree: Tree, mutation: TreeMutation) -> float:
+        """
+        Logged ratio of the likihood of the tree before and after the mutation
+        i.e. the product of the probability of all split nodes being split and all leaf node note being split
+
+        Parameters
+        ----------
+        model: ModelCGM
+            The model the tree to be changed is part of
+        tree: Tree
+            The tree being changed
+        mutation: TreeMutation
+            the proposed mutation
+
+        Returns
+        -------
+        float
+            logged likihood ratio
+        """
+        #print("enter bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio_cgm")
+        raise NotImplementedError()
+        #print("-exit bartpy/bartpy/samplers/treemutation.py TreeMutationLikihoodRatio log_tree_ratio_cgm")
+        
+    @abstractmethod
+    def log_tree_ratio_cgm_h(self, model: ModelCGM, tree: Tree, mutation: TreeMutation) -> float:
         """
         Logged ratio of the likihood of the tree before and after the mutation
         i.e. the product of the probability of all split nodes being split and all leaf node note being split

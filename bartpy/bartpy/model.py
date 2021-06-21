@@ -108,8 +108,10 @@ class ModelCGM:
                  trees_h: Optional[List[Tree]]=None,
                  n_trees_g: int=50,
                  n_trees_h: int=50,
-                 alpha: float=0.95,
-                 beta: float=2.,
+                 alpha_g=None,#: float=0.95,
+                 beta_g=None, #: float=2.,
+                 alpha_h=None,
+                 beta_h=None,
                  k: int=2.,
                  normalize=None,
                  initializer: Initializer=SklearnTreeInitializer(),
@@ -117,8 +119,10 @@ class ModelCGM:
                 ):
 
         self.data = deepcopy(data)
-        self.alpha = float(alpha)
-        self.beta = float(beta)
+        self.alpha_g = float(alpha_g)
+        self.beta_g = float(beta_g)
+        self.alpha_h = float(alpha_h)
+        self.beta_h = float(beta_h)
         self.k = k
         self.nomalize_response_bool = normalize
         self._sigma = sigma
@@ -382,6 +386,10 @@ def deep_copy_model_cgm(model: ModelCGM) -> ModelCGM:
         mu_h=model._mu_h,
         fix_g=model.fix_g,
         fix_h=model.fix_h,
-        fix_sigma=model.fix_sigma
+        fix_sigma=model.fix_sigma,
+        alpha_g=model.alpha_g,
+        alpha_h=model.alpha_h,
+        beta_g=model.beta_g,
+        beta_h=model.beta_h,
     )
     return copied_model
