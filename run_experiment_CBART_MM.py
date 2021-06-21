@@ -59,12 +59,22 @@ def get_args():
         #default = 0.75
     )
     parser.add_argument(
-        '--alpha', type=float,
+        '--alpha_g', type=float,
         help='alpha',
         required=True
     )
     parser.add_argument(
-        '--beta', type=float,
+        '--beta_g', type=float,
+        help='beta',
+        required=True
+    )
+    parser.add_argument(
+        '--alpha_h', type=float,
+        help='alpha',
+        required=True
+    )
+    parser.add_argument(
+        '--beta_h', type=float,
         help='beta',
         required=True
     )
@@ -159,8 +169,10 @@ output_name = (args.output_path +
                "_thin=" + str(args.thin) + 
                "_sigma_a=" + str(args.sigma_a) + 
                "_sigma_q=" + str(args.sigma_q) + 
-               "_alpha=" + str(args.alpha) + 
-               "_beta=" + str(args.beta) + 
+               "_alpha_g=" + str(args.alpha_g) + 
+               "_beta_g=" + str(args.beta_g) + 
+               "_alpha_h=" + str(args.alpha_h) + 
+               "_beta_h=" + str(args.beta_h) + 
                "_k=" + str(args.k) + 
                "_seed=" + str(args.seed_value) + 
                ".npy"
@@ -175,8 +187,10 @@ output_name_g = (args.output_path +
                "_thin=" + str(args.thin) +
                "_sigma_a=" + str(args.sigma_a) + 
                "_sigma_q=" + str(args.sigma_q) + 
-               "_alpha=" + str(args.alpha) + 
-               "_beta=" + str(args.beta) + 
+               "_alpha_g=" + str(args.alpha_g) + 
+               "_beta_g=" + str(args.beta_g) + 
+               "_alpha_h=" + str(args.alpha_h) + 
+               "_beta_h=" + str(args.beta_h) + 
                "_k=" + str(args.k) + 
                "_seed=" + str(args.seed_value) + 
                "_g.npy"
@@ -191,8 +205,10 @@ output_name_h = (args.output_path +
                "_thin=" + str(args.thin) + 
                "_sigma_a=" + str(args.sigma_a) + 
                "_sigma_q=" + str(args.sigma_q) + 
-               "_alpha=" + str(args.alpha) + 
-               "_beta=" + str(args.beta) + 
+               "_alpha_g=" + str(args.alpha_g) + 
+               "_beta_g=" + str(args.beta_g) + 
+               "_alpha_h=" + str(args.alpha_h) + 
+               "_beta_h=" + str(args.beta_h) + 
                "_k=" + str(args.k) + 
                "_seed=" + str(args.seed_value) + 
                "_h.npy"
@@ -207,8 +223,10 @@ output_name_sigma = (args.output_path +
                "_thin=" + str(args.thin) + 
                "_sigma_a=" + str(args.sigma_a) + 
                "_sigma_q=" + str(args.sigma_q) + 
-               "_alpha=" + str(args.alpha) + 
-               "_beta=" + str(args.beta) + 
+               "_alpha_g=" + str(args.alpha_g) + 
+               "_beta_g=" + str(args.beta_g) + 
+               "_alpha_h=" + str(args.alpha_h) + 
+               "_beta_h=" + str(args.beta_h) + 
                "_k=" + str(args.k) + 
                "_seed=" + str(args.seed_value) + 
                "_sigma.npy"
@@ -257,8 +275,10 @@ for i in range(args.N_replications):
             n_trees_g=args.n_trees_g,
             sigma_a = args.sigma_a,
             sigma_q = args.sigma_q,
-            alpha = args.alpha, # priors for tree depth
-            beta = args.beta, # priors for tree depth
+            alpha_g = args.alpha_g, # priors for tree depth
+            beta_h = args.beta_h, # priors for tree depth
+            alpha_h = args.alpha_h, # priors for tree depth
+            beta_g = args.beta_g, # priors for tree depth
             k=args.k,
             thin=args.thin,
             n_chains=args.n_chains,

@@ -180,16 +180,29 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             output = self.log_tree_ratio_prune(model, mutation)
             return output
 
-    def log_tree_ratio_cgm(self, model: ModelCGM, tree: Tree, mutation: TreeMutation):
+    def log_tree_ratio_cgm_g(self, model: ModelCGM, tree: Tree, mutation: TreeMutation):
         #print("enter bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py UniformTreeMutationLikihoodRatio  log_tree_ratio_cgm")
 
         if mutation.kind == "grow":
             mutation: GrowMutation = mutation
-            output = self.log_tree_ratio_grow_cgm(model, tree, mutation)
+            output = self.log_tree_ratio_grow_cgm_g(model, tree, mutation)
             return output
         if mutation.kind == "prune":
             mutation: PruneMutation = mutation
-            output = self.log_tree_ratio_prune_cgm(model, mutation)
+            output = self.log_tree_ratio_prune_cgm_g(model, mutation)
+            return output
+        #print("exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py UniformTreeMutationLikihoodRatio  log_tree_ratio_cgm")
+        
+    def log_tree_ratio_cgm_h(self, model: ModelCGM, tree: Tree, mutation: TreeMutation):
+        #print("enter bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py UniformTreeMutationLikihoodRatio  log_tree_ratio_cgm")
+
+        if mutation.kind == "grow":
+            mutation: GrowMutation = mutation
+            output = self.log_tree_ratio_grow_cgm_h(model, tree, mutation)
+            return output
+        if mutation.kind == "prune":
+            mutation: PruneMutation = mutation
+            output = self.log_tree_ratio_prune_cgm_h(model, mutation)
             return output
         #print("exit bartpy/bartpy/samplers/unconstrainedtree/likihoodratio.py UniformTreeMutationLikihoodRatio  log_tree_ratio_cgm")
 
@@ -342,13 +355,28 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
         return output
     
     @staticmethod
-    def log_tree_ratio_grow_cgm(model: ModelCGM, tree: Tree, proposal: GrowMutation):
+    def log_tree_ratio_grow_cgm_g(model: ModelCGM, tree: Tree, proposal: GrowMutation):
 
-        denominator = log_probability_node_not_split(model, proposal.existing_node)
+        denominator = log_probability_node_not_split_g(model, proposal.existing_node)
 
-        prob_left_not_split = log_probability_node_not_split(model, proposal.updated_node.left_child)
-        prob_right_not_split = log_probability_node_not_split(model, proposal.updated_node.right_child)
-        prob_updated_node_split = log_probability_node_split(model, proposal.updated_node)
+        prob_left_not_split = log_probability_node_not_split_g(model, proposal.updated_node.left_child)
+        prob_right_not_split = log_probability_node_not_split_g(model, proposal.updated_node.right_child)
+        prob_updated_node_split = log_probability_node_split_g(model, proposal.updated_node)
+        prob_chosen_split = log_probability_split_within_tree(tree, proposal)
+        
+        numerator = prob_left_not_split + prob_right_not_split + prob_updated_node_split + prob_chosen_split
+        output = numerator - denominator
+
+        return output
+    
+    @staticmethod
+    def log_tree_ratio_grow_cgm_h(model: ModelCGM, tree: Tree, proposal: GrowMutation):
+
+        denominator = log_probability_node_not_split_h(model, proposal.existing_node)
+
+        prob_left_not_split = log_probability_node_not_split_h(model, proposal.updated_node.left_child)
+        prob_right_not_split = log_probability_node_not_split_h(model, proposal.updated_node.right_child)
+        prob_updated_node_split = log_probability_node_split_h(model, proposal.updated_node)
         prob_chosen_split = log_probability_split_within_tree(tree, proposal)
         
         numerator = prob_left_not_split + prob_right_not_split + prob_updated_node_split + prob_chosen_split
@@ -386,17 +414,17 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
         return output
 
     @staticmethod
-    def log_tree_ratio_prune_cgm(model: ModelCGM, proposal: PruneMutation):
+    def log_tree_ratio_prune_cgm_g(model: ModelCGM, proposal: PruneMutation):
 
-        numerator = log_probability_node_not_split(model, proposal.updated_node)
+        numerator = log_probability_node_not_split_g(model, proposal.updated_node)
 
-        prob_left_not_split = log_probability_node_not_split(
+        prob_left_not_split = log_probability_node_not_split_g(
             model, proposal.existing_node.left_child
         )
-        prob_right_not_split = log_probability_node_not_split(
+        prob_right_not_split = log_probability_node_not_split_g(
             model, proposal.existing_node.left_child
         )
-        prob_updated_node_split = log_probability_node_split(
+        prob_updated_node_split = log_probability_node_split_g(
             model, proposal.existing_node
         )
         prob_chosen_split = log_probability_split_within_node(
@@ -414,6 +442,36 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
 
         return output
 
+    @staticmethod
+    def log_tree_ratio_prune_cgm_h(model: ModelCGM, proposal: PruneMutation):
+
+        numerator = log_probability_node_not_split_h(model, proposal.updated_node)
+
+        prob_left_not_split = log_probability_node_not_split_h(
+            model, proposal.existing_node.left_child
+        )
+        prob_right_not_split = log_probability_node_not_split_h(
+            model, proposal.existing_node.left_child
+        )
+        prob_updated_node_split = log_probability_node_split_h(
+            model, proposal.existing_node
+        )
+        prob_chosen_split = log_probability_split_within_node(
+            GrowMutation(proposal.updated_node, 
+                         proposal.existing_node
+                        )
+        )
+        denominator = (
+            prob_left_not_split + 
+            prob_right_not_split + 
+            prob_updated_node_split + 
+            prob_chosen_split
+        )
+        output = numerator - denominator
+
+        return output
+
+    
 def n_prunable_decision_nodes(tree: Tree) -> int:
     """
     The number of prunable decision nodes
@@ -474,6 +532,18 @@ def log_probability_node_split(model: Model, node: TreeNode):
     #print("ln(P(node depth))=", output)
     return output
 
+def log_probability_node_split_g(model: Model, node: TreeNode):
+    #print("split node depth:", node.depth)
+    output = np.log(model.alpha_g * np.power(1 + node.depth, -model.beta_g))
+    #print("ln(P(node depth))=", output)
+    return output
+
+def log_probability_node_split_h(model: Model, node: TreeNode):
+    #print("split node depth:", node.depth)
+    output = np.log(model.alpha_h * np.power(1 + node.depth, -model.beta_h))
+    #print("ln(P(node depth))=", output)
+    return output
+
 
 def log_probability_node_not_split(model: Model, node: TreeNode):
     #print("split node depth:", node.depth)
@@ -481,3 +551,14 @@ def log_probability_node_not_split(model: Model, node: TreeNode):
     #print("ln(1-P(node depth))=", output)
     return output
 
+def log_probability_node_not_split_g(model: Model, node: TreeNode):
+    #print("split node depth:", node.depth)
+    output = np.log(1. - model.alpha_g * np.power(1 + node.depth, -model.beta_g))
+    #print("ln(1-P(node depth))=", output)
+    return output
+
+def log_probability_node_not_split_h(model: Model, node: TreeNode):
+    #print("split node depth:", node.depth)
+    output = np.log(1. - model.alpha_h * np.power(1 + node.depth, -model.beta_h))
+    #print("ln(1-P(node depth))=", output)
+    return output
